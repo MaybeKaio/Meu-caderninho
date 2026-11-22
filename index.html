@@ -1,0 +1,2403 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Caderninho" />
+  <title>Meu Caderninho de Pacientes • Prontuário & Passagem de Plantão</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%230f766e%22/><path d=%22M50 24v52M24 50h52%22 stroke=%22%23ffffff%22 stroke-width=%2214%22 stroke-linecap=%22round%22/></svg>" />
+  <link rel="manifest" href="data:application/manifest+json,{&quot;name&quot;:&quot;Meu Caderninho de Pacientes&quot;,&quot;short_name&quot;:&quot;Caderninho&quot;,&quot;display&quot;:&quot;standalone&quot;,&quot;background_color&quot;:&quot;%23f8fafc&quot;,&quot;theme_color&quot;:&quot;%230f766e&quot;}" />
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Plus Jakarta Sans', 'Inter', 'system-ui', 'sans-serif'],
+            mono: ['IBM Plex Mono', 'monospace']
+          }
+        }
+      }
+    };
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    * { -webkit-tap-highlight-color: transparent; }
+    body { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
+    .clinical-mono { font-family: 'IBM Plex Mono', monospace; line-height: 1.65; tab-size: 2; }
+    .privacy-blur .blur-sensitive {
+      filter: blur(7px);
+      transition: filter 0.18s ease;
+      user-select: none;
+    }
+    .privacy-blur .blur-sensitive:hover,
+    .privacy-blur .blur-sensitive:focus {
+      filter: blur(4px);
+    }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(100, 116, 139, 0.25); border-radius: 9999px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(100, 116, 139, 0.45); }
+
+    /* Print A4 Passagem de Plantão Mode */
+    @media print {
+      body { background: #ffffff !important; color: #000000 !important; }
+      .no-print { display: none !important; }
+      #printSheetView { display: block !important; }
+      .print-card {
+        break-inside: avoid;
+        page-break-inside: avoid;
+        border: 1px solid #cbd5e1 !important;
+        padding: 10px !important;
+        margin-bottom: 10px !important;
+        border-radius: 6px !important;
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 10.5pt;
+        line-height: 1.4;
+      }
+    }
+  </style>
+</head>
+<body class="bg-[#F8FAFC] text-slate-900 dark:bg-[#0B111E] dark:text-slate-100 min-h-screen flex flex-col selection:bg-teal-600/20 selection:text-teal-700 dark:selection:text-teal-300 transition-colors duration-150">
+
+  <!-- ===================================================================== -->
+  <!-- TOP CLINICAL HEADER (REDESIGN "CLINICAL PRECISION")                   -->
+  <!-- ===================================================================== -->
+  <header class="no-print sticky top-0 z-30 bg-white/95 dark:bg-[#0F172A]/95 backdrop-blur-md border-b border-slate-200/90 dark:border-slate-800">
+    <div class="max-w-[1440px] mx-auto px-3 sm:px-5 h-14 flex items-center justify-between gap-2">
+      
+      <!-- Left: Clinical Identity + Invertexto-style URL Handle -->
+      <div class="flex items-center gap-2.5 min-w-0">
+        <button id="btnToggleSidebarMobile" type="button" class="lg:hidden p-2 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800" title="Abrir menu de abas e leitos">
+          ☰
+        </button>
+
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-lg bg-teal-700 text-white flex items-center justify-center font-bold text-sm shadow-xs shrink-0">
+            ✚
+          </div>
+          <div class="hidden sm:block leading-tight">
+            <div class="text-xs font-bold tracking-tight text-slate-900 dark:text-white">Meu Caderninho de Pacientes</div>
+            <div class="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Bloco Clínico &amp; Passagem de Plantão</div>
+          </div>
+        </div>
+
+        <!-- URL / Handle Pill -->
+        <div class="flex items-center bg-slate-100 dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-lg px-2.5 py-1 text-xs">
+          <span class="text-slate-400 dark:text-slate-500 font-mono hidden md:inline">caderninho/#/</span>
+          <span id="currentSlugDisplay" class="font-mono font-semibold text-teal-700 dark:text-teal-400 truncate max-w-[110px] sm:max-w-[160px]">maybekaioo</span>
+          <button id="btnOpenUserModal" type="button" class="ml-2 px-2 py-0.5 rounded bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-slate-700 hover:border-teal-600 hover:text-teal-700 dark:hover:text-teal-400 font-medium text-[11px] transition" title="Trocar ou criar outro caderninho (ex: /maybekaioo, /bassani)">
+            Trocar URL
+          </button>
+        </div>
+
+        <button id="btnCopyUrl" type="button" class="hidden xl:inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition" title="Copiar link direto deste caderninho">
+          <span>🔗</span>
+          <span>Copiar Link</span>
+        </button>
+      </div>
+
+      <!-- Center: View Switcher (Editor / Leitos / Links) -->
+      <div class="flex items-center bg-slate-100 dark:bg-slate-900 p-0.5 rounded-lg border border-slate-200 dark:border-slate-800 text-xs">
+        <button id="btnViewEditor" type="button" class="px-2.5 py-1 rounded-md font-semibold bg-white dark:bg-slate-800 text-teal-700 dark:text-teal-400 shadow-2xs transition">
+          📝 Editor
+        </button>
+        <button id="btnViewCards" type="button" class="px-2.5 py-1 rounded-md font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition" title="Cartões de leitos com classificação de gravidade e contagem de dias">
+          🛏️ Leitos (<span id="topBedsCount">0</span>)
+        </button>
+        <button id="btnViewLinks" type="button" class="px-2.5 py-1 rounded-md font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition" title="Organizador de Links Médicos e Protocolos">
+          🔖 Links
+        </button>
+      </div>
+
+      <!-- Right: Status + Clinical Tools Drawer + Print + Privacy + Theme -->
+      <div class="flex items-center gap-1.5">
+        <!-- Save Status -->
+        <div id="saveStatusBadge" class="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 border border-teal-200/70 dark:border-teal-800/70">
+          <span id="saveStatusDot" class="w-1.5 h-1.5 rounded-full bg-teal-600"></span>
+          <span id="saveStatusText">Salvo</span>
+        </div>
+
+        <!-- Suite Invertexto + Calculadoras Drawer -->
+        <button id="btnOpenToolsDrawer" type="button" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-teal-700 text-white hover:bg-teal-800 transition flex items-center gap-1.5 shadow-2xs" title="Abrir Calculadoras Médicas, OCR de Exames, Comparador de Evoluções, QR Code e Contador de Dias">
+          <span>🧰</span>
+          <span class="hidden md:inline">Ferramentas &amp; Cálculos</span>
+        </button>
+
+        <!-- Print A4 Shift Handover -->
+        <button id="btnPrintHandover" type="button" class="hidden md:inline-flex p-2 rounded-lg text-xs font-medium border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition" title="Imprimir Folha de Passagem de Plantão A4 em 2 Colunas">
+          🖨️
+        </button>
+
+        <!-- Privacy Blur -->
+        <button id="btnPrivacyToggle" type="button" class="p-2 rounded-lg text-xs font-medium border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition" title="Modo Discreto (Alt+P) — Borra nomes e evoluções na tela">
+          👁️
+        </button>
+
+        <!-- Cloud Sync Config -->
+        <button id="btnOpenCloudModal" type="button" class="p-2 rounded-lg text-xs font-medium border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition" title="Sincronização Google Sheets (Code.gs)">
+          ☁️
+        </button>
+
+        <!-- Theme Switch (Clinical Paper Light vs Night Shift Dark) -->
+        <button id="btnThemeToggle" type="button" class="p-2 rounded-lg text-xs font-medium border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition" title="Alternar modo Claro Clínico / Plantão Noturno">
+          🌙
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===================================================================== -->
+  <!-- MAIN 3-ZONE CLINICAL WORKSPACE                                        -->
+  <!-- ===================================================================== -->
+  <div class="no-print flex-1 max-w-[1440px] w-full mx-auto flex relative">
+
+    <!-- ZONE 1: LEFT NAVIGATION SIDEBAR (Sectors/Tabs + Patient Index + Shift Tasks) -->
+    <aside id="leftSidebar" class=" hidden lg:flex flex-col w-72 shrink-0 border-r border-slate-200/90 dark:border-slate-800 bg-white dark:bg-[#0F172A] p-3.5 gap-4 select-none z-20">
+      
+      <!-- Tabs / Sectors -->
+      <div>
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Cadernos / Setores</span>
+          <button id="btnAddTab" type="button" class="text-xs font-semibold text-teal-700 dark:text-teal-400 hover:underline">+ Nova Aba</button>
+        </div>
+        <div id="tabsListContainer" class="space-y-1 max-h-44 overflow-y-auto pr-1"></div>
+      </div>
+
+      <!-- Instant Search Filter -->
+      <div>
+        <div class="relative">
+          <input id="searchInput" type="text" placeholder="Filtrar leito, droga ou exame (Ctrl+K)..." class="w-full pl-8 pr-7 py-1.5 text-xs rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 focus:outline-none focus:border-teal-600 text-slate-800 dark:text-slate-200" />
+          <span class="absolute left-2.5 top-2 text-slate-400 text-xs">🔍</span>
+          <button id="btnClearSearch" type="button" class="hidden absolute right-2 top-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs">✕</button>
+        </div>
+      </div>
+
+      <!-- Patient / Bed Outline Index (Auto-parsed from ---) -->
+      <div class="flex-1 flex flex-col min-h-0">
+        <div class="flex items-center justify-between mb-1.5">
+          <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Pacientes na Aba</span>
+          <span id="sidebarBlockBadge" class="text-[11px] font-mono font-semibold px-1.5 py-0.5 rounded bg-teal-50 dark:bg-teal-950 text-teal-700 dark:text-teal-300 border border-teal-200/60 dark:border-teal-800">0</span>
+        </div>
+        <p class="text-[11px] text-slate-400 dark:text-slate-500 mb-2">Use <code class="font-mono text-teal-700 dark:text-teal-400">---</code> em uma linha para separar cada paciente:</p>
+        <div id="outlineListContainer" class="flex-1 overflow-y-auto space-y-1.5 pr-1"></div>
+      </div>
+
+      <!-- Shift Checklist (Pendências do Plantão) -->
+      <div class="pt-3 border-t border-slate-200/80 dark:border-slate-800">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Pendências do Plantão</span>
+          <button id="btnClearDoneTasks" type="button" class="text-[11px] text-slate-400 hover:text-teal-600">Limpar feitas</button>
+        </div>
+        <form id="todoForm" class="flex gap-1.5 mb-2">
+          <input id="todoInput" type="text" placeholder="Ex: Checar 2ª Troponina L01..." class="flex-1 px-2.5 py-1 text-xs rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 focus:outline-none focus:border-teal-600" />
+          <button type="submit" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-teal-700 text-white hover:bg-teal-800 transition">+</button>
+        </form>
+        <div id="todoListContainer" class="space-y-1 max-h-36 overflow-y-auto pr-1"></div>
+      </div>
+    </aside>
+
+    <!-- ZONE 2: MAIN CLINICAL CONTENT AREA -->
+    <main class="flex-1 flex flex-col min-w-0 p-3 sm:p-5 gap-3">
+
+      <!-- CLINICAL INSERTION & SNIPPETS BAR -->
+      <section class="bg-white dark:bg-[#0F172A] border border-slate-200/90 dark:border-slate-800 rounded-xl p-2.5 shadow-2xs flex flex-col gap-2">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div class="flex flex-wrap items-center gap-1.5">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mr-1">Modelos:</span>
+            <button type="button" data-snippet="paciente_upa" class="snippet-btn px-2.5 py-1 rounded-lg text-xs font-semibold bg-teal-50 dark:bg-teal-950/70 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-800 hover:bg-teal-700 hover:text-white transition">
+              + Paciente UPA (Padrão Bassani)
+            </button>
+            <button type="button" data-snippet="soap" class="snippet-btn px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-teal-700 hover:text-white transition">
+              + Evolução SOAP
+            </button>
+            <button type="button" data-snippet="admissao_sv" class="snippet-btn px-2.5 py-1 rounded-lg text-xs font-medium bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 border border-rose-200/70 dark:border-rose-800/70 hover:bg-rose-600 hover:text-white transition">
+              + Sala Vermelha / Grave
+            </button>
+            <button type="button" data-snippet="exame_normal" class="snippet-btn px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-teal-700 hover:text-white transition">
+              + Exame Físico Normal
+            </button>
+            <button type="button" data-snippet="divisor" class="snippet-btn px-2 py-1 rounded-lg text-xs font-mono bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 transition" title="Separador de leitos (---)">
+              --- Divisor
+            </button>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-1.5">
+            <button id="btnOpenLabModal" type="button" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800 hover:bg-sky-600 hover:text-white transition" title="Colar exames do sistema do hospital ou preencher grade compacta">
+              🧪 Compactar / Colar Labs
+            </button>
+            <button id="btnOpenFindReplaceModal" type="button" class="px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition" title="Localizar e Substituir + Utilitários de Texto do Invertexto">
+              🔤 Texto / Substituir
+            </button>
+            <button id="btnOpenHistoryModal" type="button" class="px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition" title="Restaurar versões anteriores salvas automaticamente neste navegador">
+              ⏪ Histórico
+            </button>
+            <button id="btnCopyAllTab" type="button" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 hover:opacity-90 transition">
+              📋 Copiar Aba
+            </button>
+          </div>
+        </div>
+
+        <!-- 1-Tap Clinical Hashtags & Vitals -->
+        <div class="flex items-center gap-1 overflow-x-auto pt-1.5 border-t border-slate-100 dark:border-slate-800/80 text-[11px] font-mono">
+          <span class="text-slate-400 font-sans pr-1 shrink-0">Tags:</span>
+          <button type="button" data-tag="DI: " class="tag-btn px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-teal-600 hover:text-white shrink-0">DI:</button>
+          <button type="button" data-tag="HP: " class="tag-btn px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-teal-600 hover:text-white shrink-0">HP:</button>
+          <button type="button" data-tag="HISTÓRIA CLÍNICA: " class="tag-btn px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-teal-600 hover:text-white shrink-0">HISTÓRIA CLÍNICA:</button>
+          <button type="button" data-tag="#HPP: " class="tag-btn px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-teal-600 hover:text-white shrink-0">#HPP</button>
+          <button type="button" data-tag="#MUC: " class="tag-btn px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-teal-600 hover:text-white shrink-0">#MUC</button>
+          <button type="button" data-tag="#ALERGIA: " class="tag-btn px-2 py-0.5 rounded bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 hover:bg-rose-600 hover:text-white shrink-0">#ALERGIA</button>
+          <button type="button" data-tag="#EVOLUÇÃO: " class="tag-btn px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-teal-600 hover:text-white shrink-0">#EVOLUÇÃO</button>
+          <button type="button" data-tag="#EXAMES LABORATORIAIS: " class="tag-btn px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-teal-600 hover:text-white shrink-0">#LABS</button>
+          <button type="button" data-tag="#EX DE IMAGEM: " class="tag-btn px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-teal-600 hover:text-white shrink-0">#IMAGEM</button>
+          <button type="button" data-tag="#PARECERES: " class="tag-btn px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-teal-600 hover:text-white shrink-0">#PARECERES</button>
+          <button type="button" data-tag="#ATB: " class="tag-btn px-2 py-0.5 rounded bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 hover:bg-amber-600 hover:text-white shrink-0">#ATB</button>
+          <button type="button" data-tag="#CD:\n- " class="tag-btn px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-teal-600 hover:text-white shrink-0">#CD</button>
+          <button type="button" data-tag="PA: 120x80 mmHg | FC: 78 bpm | FR: 16 irpm | SpO2: 98% AA | Tax: 36.5°C | HGT: 95 mg/dL" class="tag-btn px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-teal-600 hover:text-white shrink-0">SSVV</button>
+        </div>
+      </section>
+
+      <!-- ================================================================= -->
+      <!-- VIEW A: CONTINUOUS CLINICAL EDITOR                                -->
+      <!-- ================================================================= -->
+      <div id="viewEditorPanel" class="flex-1 flex flex-col bg-white dark:bg-[#0F172A] border border-slate-200/90 dark:border-slate-800 rounded-xl shadow-2xs overflow-hidden min-h-[66vh]">
+        <!-- Editor Header Bar -->
+        <div class="px-4 py-2.5 border-b border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2 bg-slate-50/70 dark:bg-slate-900/50 text-xs">
+          <div class="flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-teal-600"></span>
+            <span id="activeTabTitleLabel" class="font-bold text-slate-800 dark:text-slate-100">Passagem de Plantão (UPA)</span>
+            <button id="btnRenameTab" type="button" class="px-1.5 py-0.5 rounded text-slate-400 hover:text-teal-600 hover:bg-slate-100 dark:hover:bg-slate-800 text-[11px]" title="Renomear esta aba">✏️ Renomear</button>
+            <button id="btnDeleteTab" type="button" class="px-1.5 py-0.5 rounded text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-[11px]" title="Excluir esta aba">🗑️</button>
+          </div>
+          <!-- Invertexto Counter Stats -->
+          <div class="flex items-center gap-2.5 text-[11px] text-slate-500 dark:text-slate-400 font-mono">
+            <span id="statBlocksCount">0 leitos</span>
+            <span>•</span>
+            <span id="statWordsCount">0 palavras</span>
+            <span>•</span>
+            <span id="statLinesCount">0 linhas</span>
+            <span>•</span>
+            <span id="statCharsCount">0 caracteres</span>
+          </div>
+        </div>
+
+        <!-- Clinical Textarea -->
+        <textarea
+          id="mainNotepadEditor"
+          spellcheck="false"
+          placeholder="Digite ou cole suas evoluções, casos de plantão, prescrições ou lembretes...&#10;Dica: Separe cada paciente com --- em uma linha para gerar os cartões de leitos automaticamente com cálculo de dias de internação (DI: DD/MM/AAAA)."
+          class="blur-sensitive clinical-mono flex-1 w-full p-4 sm:p-6 bg-transparent text-slate-800 dark:text-slate-100 text-[13.5px] focus:outline-none resize-y min-h-[500px]"
+        ></textarea>
+      </div>
+
+      <!-- ================================================================= -->
+      <!-- VIEW B: BED / PATIENT CARDS WITH SEVERITY & AUTO DAY COUNTER      -->
+      <!-- ================================================================= -->
+      <div id="viewCardsPanel" class="hidden flex-1 flex-col gap-3">
+        <div class="flex flex-wrap items-center justify-between gap-2 bg-white dark:bg-[#0F172A] border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 shadow-2xs">
+          <div class="flex flex-wrap items-center gap-3 text-xs">
+            <span class="font-bold text-slate-800 dark:text-slate-200">Classificação Automática de Leitos:</span>
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800 text-[11px] font-medium">● Sala Vermelha / Grave</span>
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 text-[11px] font-medium">● Sala Amarela / Observação</span>
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-800 text-[11px] font-medium">● Enfermaria / Evolução</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <button id="btnAddPatientCard" type="button" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-teal-700 text-white hover:bg-teal-800 transition">
+              + Novo Leito na Aba
+            </button>
+          </div>
+        </div>
+
+        <div id="parsedCardsGrid" class="grid grid-cols-1 md:grid-cols-2 gap-3.5"></div>
+      </div>
+
+      <!-- ================================================================= -->
+      <!-- VIEW C: MEDICAL LINKS ORGANIZER (INVERTEXTO ORGANIZADOR DE LINKS) -->
+      <!-- ================================================================= -->
+      <div id="viewLinksPanel" class="hidden flex-1 flex-col gap-3">
+        <div class="bg-white dark:bg-[#0F172A] border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-2xs">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+            <div>
+              <h2 class="text-sm font-bold text-slate-900 dark:text-white">🔖 Organizador de Links Clínicos &amp; Protocolos</h2>
+              <p class="text-xs text-slate-500 dark:text-slate-400">Salve links rápidos do hospital, UpToDate, diretrizes da SBC/AMIB, PACS de imagem ou calculadoras externas no seu caderninho.</p>
+            </div>
+          </div>
+
+          <form id="addLinkForm" class="grid grid-cols-1 sm:grid-cols-12 gap-2 mb-4 p-3 rounded-xl bg-slate-50 dark:bg-slate-900/70 border border-slate-200/80 dark:border-slate-800">
+            <input id="linkTitleInput" type="text" required placeholder="Título (ex: PACS Raio-X Hospital, Diretriz Sepse)" class="sm:col-span-4 px-3 py-1.5 text-xs rounded-lg bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800" />
+            <input id="linkUrlInput" type="url" required placeholder="https://..." class="sm:col-span-5 px-3 py-1.5 text-xs font-mono rounded-lg bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800" />
+            <input id="linkCategoryInput" type="text" placeholder="Categoria (ex: Plantão, Diretriz)" class="sm:col-span-2 px-3 py-1.5 text-xs rounded-lg bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800" />
+            <button type="submit" class="sm:col-span-1 px-3 py-1.5 rounded-lg text-xs font-bold bg-teal-700 text-white hover:bg-teal-800 transition">Salvar</button>
+          </form>
+
+          <div id="linksGridContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5"></div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- PRINT-ONLY A4 SHIFT HANDOVER VIEW (2 COLUMNS)                         -->
+  <!-- ===================================================================== -->
+  <div id="printSheetView" class="hidden p-4">
+    <div class="border-b-2 border-slate-900 pb-2 mb-3 flex justify-between items-end">
+      <div>
+        <h1 class="text-base font-bold uppercase">Meu Caderninho de Pacientes — Passagem de Plantão</h1>
+        <p id="printHeaderSubtitle" class="text-xs font-mono">Caderno: /maybekaioo</p>
+      </div>
+      <div id="printHeaderDate" class="text-xs font-mono"></div>
+    </div>
+    <div id="printCardsContainer" class="grid grid-cols-2 gap-3"></div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- FOOTER BAR                                                            -->
+  <!-- ===================================================================== -->
+  <footer class="no-print border-t border-slate-200/90 dark:border-slate-800 bg-white dark:bg-[#0F172A] py-2.5 px-3 sm:px-6 mt-auto">
+    <div class="max-w-[1440px] mx-auto flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500 dark:text-slate-400">
+      <div class="flex flex-wrap items-center gap-1.5">
+        <button id="btnFooterCopyLink" type="button" class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-teal-700 hover:text-white transition font-medium">
+          🔗 Copiar Link
+        </button>
+        <button id="btnFooterChangeUrl" type="button" class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-teal-700 hover:text-white transition font-medium">
+          🔀 Trocar URL
+        </button>
+        <button id="btnOpenQrModal" type="button" class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-teal-700 hover:text-white transition font-medium" title="Passar plantão ou texto via QR Code para o celular de um colega">
+          📱 QR Code Plantão
+        </button>
+        <button id="btnExportTxt" type="button" class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition font-medium">
+          ⬇️ Baixar .TXT
+        </button>
+        <button id="btnExportJson" type="button" class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition font-medium">
+          📦 Backup .JSON
+        </button>
+        <label class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition font-medium cursor-pointer">
+          📂 Importar .JSON
+          <input id="inputImportJson" type="file" accept=".json,application/json" class="hidden" />
+        </label>
+      </div>
+      <div class="flex items-center gap-2 font-mono text-[11px]">
+        <span>Atalhos: <kbd class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">Ctrl+K</kbd> Busca • <kbd class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">Alt+P</kbd> Borrar • <kbd class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">Esc</kbd> Fechar</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ===================================================================== -->
+  <!-- DRAWER DIREITO: SUITE INVERTEXTO MÉDICO & CALCULADORAS DE PLANTÃO     -->
+  <!-- ===================================================================== -->
+  <div id="toolsDrawerBackdrop" class="no-print hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex justify-end">
+    <div id="toolsDrawerPanel" class="bg-white dark:bg-[#0F172A] border-l border-slate-200 dark:border-slate-800 w-full max-w-xl h-full flex flex-col shadow-2xl">
+      
+      <!-- Drawer Header -->
+      <div class="px-5 py-3.5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/70 dark:bg-slate-900/50">
+        <div>
+          <h3 class="text-sm font-bold text-slate-900 dark:text-white">🧰 Suite Clínica &amp; Ferramentas Invertexto</h3>
+          <p class="text-[11px] text-slate-500 dark:text-slate-400">Calculadoras médicas, Contador de Dias/IG, Comparador de Evoluções e OCR</p>
+        </div>
+        <button id="btnCloseToolsDrawer" type="button" class="p-1.5 rounded-lg bg-slate-200/70 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-rose-500 hover:text-white transition">✕</button>
+      </div>
+
+      <!-- Drawer Sub-Navigation Tabs -->
+      <div class="px-5 pt-2.5 border-b border-slate-200 dark:border-slate-800 flex gap-1.5 overflow-x-auto bg-slate-50/40 dark:bg-slate-900/20 text-xs">
+        <button type="button" data-drawer-tab="calc" class="drawer-tab-btn pb-2 px-2.5 font-bold border-b-2 border-teal-600 text-teal-700 dark:text-teal-400 shrink-0">🧮 Calculadoras</button>
+        <button type="button" data-drawer-tab="dates" class="drawer-tab-btn pb-2 px-2.5 font-medium border-b-2 border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 shrink-0">📅 Dias, Idade &amp; IG</button>
+        <button type="button" data-drawer-tab="diff" class="drawer-tab-btn pb-2 px-2.5 font-medium border-b-2 border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 shrink-0">🔍 Comparar Evoluções</button>
+        <button type="button" data-drawer-tab="ocr" class="drawer-tab-btn pb-2 px-2.5 font-medium border-b-2 border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 shrink-0">📷 Foto p/ Texto (OCR)</button>
+      </div>
+
+      <!-- Drawer Body -->
+      <div class="flex-1 overflow-y-auto p-5 space-y-4">
+
+        <!-- SUB-TAB 1: CALCULADORAS DE PLANTÃO -->
+        <div id="drawerTabCalc" class="space-y-4">
+          <!-- 1. Clearance de Creatinina (Cockcroft-Gault) -->
+          <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 space-y-2.5">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-teal-700 dark:text-teal-400">1. Clearance de Creatinina (Cockcroft-Gault)</span>
+              <button id="btnInsertCrCl" type="button" class="text-[11px] font-semibold px-2.5 py-0.5 rounded bg-teal-600 text-white hover:bg-teal-700 transition">Inserir na nota</button>
+            </div>
+            <div class="grid grid-cols-4 gap-2 text-xs">
+              <div>
+                <label class="text-[10px] text-slate-500">Idade (anos)</label>
+                <input id="cgAge" type="number" min="1" max="120" value="65" class="w-full px-2 py-1 rounded bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 font-mono" />
+              </div>
+              <div>
+                <label class="text-[10px] text-slate-500">Peso (kg)</label>
+                <input id="cgWeight" type="number" min="1" max="300" value="70" class="w-full px-2 py-1 rounded bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 font-mono" />
+              </div>
+              <div>
+                <label class="text-[10px] text-slate-500">Cr (mg/dL)</label>
+                <input id="cgCr" type="number" step="0.1" min="0.1" value="1.4" class="w-full px-2 py-1 rounded bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 font-mono" />
+              </div>
+              <div>
+                <label class="text-[10px] text-slate-500">Sexo</label>
+                <select id="cgSex" class="w-full px-1.5 py-1 rounded bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800">
+                  <option value="M">Masc</option>
+                  <option value="F">Fem (x0.85)</option>
+                </select>
+              </div>
+            </div>
+            <div id="cgResultText" class="text-xs font-mono text-slate-800 dark:text-slate-200 bg-white dark:bg-slate-950 px-2.5 py-1.5 rounded border border-slate-200 dark:border-slate-800"></div>
+          </div>
+
+          <!-- 2. Sódio Corrigido (Katz) + Osmolaridade -->
+          <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 space-y-2.5">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-teal-700 dark:text-teal-400">2. Sódio Corrigido (CAD/EHH) &amp; Osmolaridade</span>
+              <button id="btnInsertNaCorr" type="button" class="text-[11px] font-semibold px-2.5 py-0.5 rounded bg-teal-600 text-white hover:bg-teal-700 transition">Inserir na nota</button>
+            </div>
+            <div class="grid grid-cols-3 gap-2 text-xs">
+              <div>
+                <label class="text-[10px] text-slate-500">Na Medido</label>
+                <input id="naMeasured" type="number" value="130" class="w-full px-2 py-1 rounded bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 font-mono" />
+              </div>
+              <div>
+                <label class="text-[10px] text-slate-500">Glicemia (mg/dL)</label>
+                <input id="naGlucose" type="number" value="400" class="w-full px-2 py-1 rounded bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 font-mono" />
+              </div>
+              <div>
+                <label class="text-[10px] text-slate-500">Ureia (mg/dL)</label>
+                <input id="naUrea" type="number" value="48" class="w-full px-2 py-1 rounded bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 font-mono" />
+              </div>
+            </div>
+            <div id="naResultText" class="text-xs font-mono text-slate-800 dark:text-slate-200 bg-white dark:bg-slate-950 px-2.5 py-1.5 rounded border border-slate-200 dark:border-slate-800"></div>
+          </div>
+
+          <!-- 3. Bomba de Infusão / DVA + Regra de 3 de Dose -->
+          <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 space-y-2.5">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-teal-700 dark:text-teal-400">3. Bomba de Infusão DVA (mL/h → mcg/kg/min)</span>
+              <button id="btnInsertVaso" type="button" class="text-[11px] font-semibold px-2.5 py-0.5 rounded bg-teal-600 text-white hover:bg-teal-700 transition">Inserir na nota</button>
+            </div>
+            <div class="grid grid-cols-3 gap-2 text-xs">
+              <div>
+                <label class="text-[10px] text-slate-500">Solução</label>
+                <select id="vasoPreset" class="w-full px-1.5 py-1 rounded bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800">
+                  <option value="64">Nora Padrão (64 mcg/mL)</option>
+                  <option value="128">Nora Dobrada (128 mcg/mL)</option>
+                  <option value="1000">Dobutamina (1000 mcg/mL)</option>
+                  <option value="200">Nipride (200 mcg/mL)</option>
+                </select>
+              </div>
+              <div>
+                <label class="text-[10px] text-slate-500">Peso (kg)</label>
+                <input id="vasoWeight" type="number" value="70" class="w-full px-2 py-1 rounded bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 font-mono" />
+              </div>
+              <div>
+                <label class="text-[10px] text-slate-500">Vazão (mL/h)</label>
+                <input id="vasoRate" type="number" step="1" value="10" class="w-full px-2 py-1 rounded bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 font-mono" />
+              </div>
+            </div>
+            <div id="vasoResultText" class="text-xs font-mono text-slate-800 dark:text-slate-200 bg-white dark:bg-slate-950 px-2.5 py-1.5 rounded border border-slate-200 dark:border-slate-800"></div>
+          </div>
+
+          <!-- 4. IMC + Superfície Corporal + Peso Ideal (VM) -->
+          <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 space-y-2.5">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-teal-700 dark:text-teal-400">4. IMC, Peso Predito (VM 6 mL/kg) &amp; SC</span>
+              <button id="btnInsertBmi" type="button" class="text-[11px] font-semibold px-2.5 py-0.5 rounded bg-teal-600 text-white hover:bg-teal-700 transition">Inserir na nota</button>
+            </div>
+            <div class="grid grid-cols-3 gap-2 text-xs">
+              <div>
+                <label class="text-[10px] text-slate-500">Peso Atual (kg)</label>
+                <input id="bmiWeight" type="number" value="78" class="w-full px-2 py-1 rounded bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 font-mono" />
+              </div>
+              <div>
+                <label class="text-[10px] text-slate-500">Altura (cm)</label>
+                <input id="bmiHeight" type="number" value="172" class="w-full px-2 py-1 rounded bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 font-mono" />
+              </div>
+              <div>
+                <label class="text-[10px] text-slate-500">Sexo (p/ VM)</label>
+                <select id="bmiSex" class="w-full px-1.5 py-1 rounded bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800">
+                  <option value="M">Masculino</option>
+                  <option value="F">Feminino</option>
+                </select>
+              </div>
+            </div>
+            <div id="bmiResultText" class="text-xs font-mono text-slate-800 dark:text-slate-200 bg-white dark:bg-slate-950 px-2.5 py-1.5 rounded border border-slate-200 dark:border-slate-800"></div>
+          </div>
+
+          <!-- 5. CURB-65 -->
+          <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-teal-700 dark:text-teal-400">5. Escore CURB-65 (PAC)</span>
+              <button id="btnInsertCurb" type="button" class="text-[11px] font-semibold px-2.5 py-0.5 rounded bg-teal-600 text-white hover:bg-teal-700 transition">Inserir na nota</button>
+            </div>
+            <div class="grid grid-cols-1 gap-1 text-xs">
+              <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="curb-check accent-teal-600" /> Confusão mental aguda</label>
+              <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="curb-check accent-teal-600" /> Ureia &gt; 50 mg/dL (ou &gt; 43 mg/dL)</label>
+              <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="curb-check accent-teal-600" /> FR ≥ 30 irpm</label>
+              <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="curb-check accent-teal-600" /> PAS &lt; 90 mmHg ou PAD ≤ 60 mmHg</label>
+              <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="curb-check accent-teal-600" /> Idade ≥ 65 anos</label>
+            </div>
+            <div id="curbResultText" class="text-xs font-mono text-slate-800 dark:text-slate-200 bg-white dark:bg-slate-950 px-2.5 py-1.5 rounded border border-slate-200 dark:border-slate-800"></div>
+          </div>
+        </div>
+
+        <!-- SUB-TAB 2: DATAS CLÍNICAS (DIAS DE INTERNAÇÃO/ATB, IDADE EXATA E IG/DPP) -->
+        <div id="drawerTabDates" class="hidden space-y-4">
+          <!-- Contador de Dias (DI / ATB) -->
+          <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 space-y-2.5">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-teal-700 dark:text-teal-400">📅 Contador de Dias (DI / Antibiótico / Pós-Op)</span>
+              <button id="btnInsertDayCount" type="button" class="text-[11px] font-semibold px-2.5 py-0.5 rounded bg-teal-600 text-white">Inserir na nota</button>
+            </div>
+            <div class="grid grid-cols-2 gap-2 text-xs">
+              <div>
+                <label class="text-[10px] text-slate-500">Data de Início (DI / D0)</label>
+                <input id="dateStartInput" type="date" class="w-full px-2 py-1 rounded bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 font-mono" />
+              </div>
+              <div>
+                <label class="text-[10px] text-slate-500">Meta de Dias (ex: ATB 7d)</label>
+                <input id="dateTargetDays" type="number" value="7" min="1" class="w-full px-2 py-1 rounded bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 font-mono" />
+              </div>
+            </div>
+            <div id="dateCountResult" class="text-xs font-mono text-slate-800 dark:text-slate-200 bg-white dark:bg-slate-950 px-2.5 py-1.5 rounded border border-slate-200 dark:border-slate-800"></div>
+          </div>
+
+          <!-- Calculadora Gestacional (DUM -> IG & DPP) -->
+          <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 space-y-2.5">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-teal-700 dark:text-teal-400">🤰 Calculadora Gestacional (IG &amp; DPP por DUM)</span>
+              <button id="btnInsertObCalc" type="button" class="text-[11px] font-semibold px-2.5 py-0.5 rounded bg-teal-600 text-white">Inserir na nota</button>
+            </div>
+            <div>
+              <label class="text-[10px] text-slate-500 block mb-1">Data da Última Menstruação (DUM)</label>
+              <input id="obDumInput" type="date" class="w-full px-2 py-1 text-xs rounded bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 font-mono" />
+            </div>
+            <div id="obResultText" class="text-xs font-mono text-slate-800 dark:text-slate-200 bg-white dark:bg-slate-950 px-2.5 py-1.5 rounded border border-slate-200 dark:border-slate-800">Selecione a DUM para calcular IG e DPP.</div>
+          </div>
+
+          <!-- Calculadora de Idade Exata (Pediatria / Geriatria) -->
+          <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 space-y-2.5">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-teal-700 dark:text-teal-400">👶 Idade Exata (Anos, Meses e Dias)</span>
+              <button id="btnInsertAgeCalc" type="button" class="text-[11px] font-semibold px-2.5 py-0.5 rounded bg-teal-600 text-white">Inserir na nota</button>
+            </div>
+            <div>
+              <label class="text-[10px] text-slate-500 block mb-1">Data de Nascimento (DN)</label>
+              <input id="birthDateInput" type="date" class="w-full px-2 py-1 text-xs rounded bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 font-mono" />
+            </div>
+            <div id="ageResultText" class="text-xs font-mono text-slate-800 dark:text-slate-200 bg-white dark:bg-slate-950 px-2.5 py-1.5 rounded border border-slate-200 dark:border-slate-800">Selecione a DN para calcular.</div>
+          </div>
+        </div>
+
+        <!-- SUB-TAB 3: COMPARADOR DE EVOLUÇÕES / PRESCRIÇÕES (INVERTEXTO DIFF) -->
+        <div id="drawerTabDiff" class="hidden space-y-3">
+          <p class="text-xs text-slate-500 dark:text-slate-400">
+            Compare a evolução/prescrição de ontem com a de hoje para identificar rapidamente o que foi adicionado (verde) ou removido (vermelho).
+          </p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div>
+              <label class="text-[11px] font-semibold text-slate-500 block mb-1">Texto Anterior (Ontem)</label>
+              <textarea id="diffTextOld" rows="6" placeholder="Cole a evolução ou prescrição antiga..." class="w-full p-2 text-xs font-mono rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800"></textarea>
+            </div>
+            <div>
+              <label class="text-[11px] font-semibold text-slate-500 block mb-1">Texto Atual (Hoje)</label>
+              <textarea id="diffTextNew" rows="6" placeholder="Cole a evolução ou prescrição nova..." class="w-full p-2 text-xs font-mono rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800"></textarea>
+            </div>
+          </div>
+          <button id="btnRunDiff" type="button" class="w-full py-2 rounded-lg text-xs font-bold bg-teal-700 text-white hover:bg-teal-800 transition">
+            🔍 Comparar Linhas Agora
+          </button>
+          <div id="diffOutputContainer" class="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs font-mono space-y-1 max-h-64 overflow-y-auto">
+            <div class="text-slate-400 text-center py-4">O resultado da comparação aparecerá aqui.</div>
+          </div>
+        </div>
+
+        <!-- SUB-TAB 4: CONVERTER IMAGEM DE EXAME EM TEXTO (OCR) -->
+        <div id="drawerTabOcr" class="hidden space-y-3">
+          <p class="text-xs text-slate-500 dark:text-slate-400">
+            Envie uma foto ou print de tela de exames laboratoriais/laudos para extrair o texto automaticamente e inserir na evolução.
+          </p>
+          <label class="flex flex-col items-center justify-center p-5 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl cursor-pointer hover:border-teal-600 transition bg-slate-50/50 dark:bg-slate-900/40">
+            <span class="text-2xl mb-1">📷</span>
+            <span class="text-xs font-semibold text-slate-700 dark:text-slate-200">Selecionar Foto ou Print do Exame</span>
+            <span class="text-[11px] text-slate-400">PNG, JPG ou WebP</span>
+            <input id="ocrFileInput" type="file" accept="image/*" class="hidden" />
+          </label>
+          <div id="ocrStatusText" class="text-xs font-mono text-teal-700 dark:text-teal-400">Aguardando imagem...</div>
+          <textarea id="ocrResultTextarea" rows="6" placeholder="O texto extraído da imagem aparecerá aqui para revisão..." class="w-full p-2.5 text-xs font-mono rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800"></textarea>
+          <div class="flex justify-end gap-2">
+            <button id="btnInsertOcrText" type="button" class="px-4 py-1.5 rounded-lg text-xs font-semibold bg-teal-700 text-white hover:bg-teal-800 transition">
+              Inserir Texto na Evolução
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- MODAL 1: TROCAR / CRIAR URL DE USUÁRIO (ESTILO INVERTEXTO)            -->
+  <!-- ===================================================================== -->
+  <div id="userModal" class="no-print modal-backdrop hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-[#111927] border border-slate-200 dark:border-slate-800 rounded-2xl max-w-md w-full p-5 shadow-2xl">
+      <div class="flex items-center justify-between mb-2">
+        <h3 class="text-base font-bold text-slate-900 dark:text-white">Acessar ou Criar Caderninho</h3>
+        <button id="btnCloseUserModal" type="button" class="text-slate-400 hover:text-slate-700 dark:hover:text-white text-sm">✕</button>
+      </div>
+      <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">
+        Digite qualquer endereço/usuário (como no Invertexto). Se já existir, o caderninho é aberto; se não existir, um novo é criado imediatamente sem senha.
+      </p>
+      <form id="switchUserForm" class="space-y-3">
+        <div>
+          <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">URL do Caderninho</label>
+          <div class="flex items-center rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 px-3 py-2">
+            <span class="text-xs font-mono text-slate-400 select-none">caderninho/#/</span>
+            <input id="inputNewUserSlug" type="text" required placeholder="ex: maybekaioo, bassani, uti-leitos" class="flex-1 bg-transparent text-sm font-mono text-slate-900 dark:text-white focus:outline-none" />
+          </div>
+        </div>
+
+        <div>
+          <span class="block text-[11px] font-medium text-slate-400 mb-1.5">Caderninhos acessados neste dispositivo:</span>
+          <div id="savedUsersPills" class="flex flex-wrap gap-1.5"></div>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-2">
+          <button id="btnCancelUserModal" type="button" class="px-3.5 py-2 rounded-xl text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">Cancelar</button>
+          <button type="submit" class="px-4 py-2 rounded-xl text-xs font-semibold bg-teal-700 text-white hover:bg-teal-800 transition">Abrir Caderninho →</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- MODAL 2: COMPACTADOR E PARSER INTELIGENTE DE EXAMES LABORATORIAIS     -->
+  <!-- ===================================================================== -->
+  <div id="labModal" class="no-print modal-backdrop hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-[#111927] border border-slate-200 dark:border-slate-800 rounded-2xl max-w-lg w-full p-5 shadow-2xl">
+      <div class="flex items-center justify-between mb-2">
+        <h3 class="text-base font-bold text-slate-900 dark:text-white">🧪 Compactador &amp; Parser de Exames</h3>
+        <button id="btnCloseLabModal" type="button" class="text-slate-400 hover:text-slate-700 dark:hover:text-white text-sm">✕</button>
+      </div>
+      <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">
+        Preencha os campos ou cole o laudo bruto do prontuário (MV/Tasy) — o sistema reconhece nomes por extenso (ex: <em>Hemoglobina 12,4</em> → <code class="text-teal-600">Hb 12.4</code>) automaticamente.
+      </p>
+
+      <div class="grid grid-cols-3 sm:grid-cols-4 gap-2 mb-3 text-xs">
+        <div><label class="text-[10px] text-slate-500">Data</label><input id="labDate" type="text" placeholder="18/11" class="w-full px-2 py-1 rounded bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 font-mono" /></div>
+        <div><label class="text-[10px] text-slate-500">Hb</label><input id="labHb" type="text" placeholder="12.4" class="w-full px-2 py-1 rounded bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 font-mono" /></div>
+        <div><label class="text-[10px] text-slate-500">Ht (%)</label><input id="labHt" type="text" placeholder="37%" class="w-full px-2 py-1 rounded bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 font-mono" /></div>
+        <div><label class="text-[10px] text-slate-500">Leuco</label><input id="labLeuco" type="text" placeholder="11.200" class="w-full px-2 py-1 rounded bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 font-mono" /></div>
+        <div><label class="text-[10px] text-slate-500">Plaq</label><input id="labPlaq" type="text" placeholder="240k" class="w-full px-2 py-1 rounded bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 font-mono" /></div>
+        <div><label class="text-[10px] text-slate-500">PCR</label><input id="labPcr" type="text" placeholder="45" class="w-full px-2 py-1 rounded bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 font-mono" /></div>
+        <div><label class="text-[10px] text-slate-500">Cr</label><input id="labCr" type="text" placeholder="1.1" class="w-full px-2 py-1 rounded bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 font-mono" /></div>
+        <div><label class="text-[10px] text-slate-500">Ur</label><input id="labUr" type="text" placeholder="42" class="w-full px-2 py-1 rounded bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 font-mono" /></div>
+        <div><label class="text-[10px] text-slate-500">Na</label><input id="labNa" type="text" placeholder="138" class="w-full px-2 py-1 rounded bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 font-mono" /></div>
+        <div><label class="text-[10px] text-slate-500">K</label><input id="labK" type="text" placeholder="4.2" class="w-full px-2 py-1 rounded bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 font-mono" /></div>
+        <div><label class="text-[10px] text-slate-500">TGO/TGP</label><input id="labTrans" type="text" placeholder="28/34" class="w-full px-2 py-1 rounded bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 font-mono" /></div>
+        <div><label class="text-[10px] text-slate-500">Outros</label><input id="labExtra" type="text" placeholder="Tropo neg" class="w-full px-2 py-1 rounded bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 font-mono" /></div>
+      </div>
+
+      <div class="mb-3">
+        <div class="flex items-center justify-between mb-1">
+          <label class="text-[11px] text-slate-500">Colar laudo bruto do sistema hospitalar:</label>
+          <button id="btnAutoExtractLabs" type="button" class="text-[11px] font-semibold text-teal-700 dark:text-teal-400 hover:underline">✨ Extrair Siglas Automaticamente</button>
+        </div>
+        <textarea id="labRawPaste" rows="2" placeholder="Ex: Hemoglobina: 13,2 / Leucócitos: 9500 / Creatinina: 1,1 / Potássio: 4,4..." class="w-full p-2 text-xs font-mono rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-800"></textarea>
+      </div>
+
+      <div class="p-2.5 rounded-lg bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 mb-4">
+        <div class="text-[10px] uppercase text-slate-400 mb-1">Prévia Compactada:</div>
+        <div id="labPreviewOutput" class="font-mono text-xs text-teal-700 dark:text-teal-400 break-words"># EXAMES LABORATORIAIS: </div>
+      </div>
+
+      <div class="flex justify-end gap-2">
+        <button id="btnClearLabInputs" type="button" class="px-3 py-1.5 rounded-lg text-xs bg-slate-100 dark:bg-slate-800 text-slate-500">Limpar</button>
+        <button id="btnInsertLabLine" type="button" class="px-4 py-1.5 rounded-lg text-xs font-semibold bg-teal-700 text-white hover:bg-teal-800">Inserir na Evolução</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- MODAL 3: MANIPULAÇÃO DE TEXTO & LOCALIZAR/SUBSTITUIR (INVERTEXTO)     -->
+  <!-- ===================================================================== -->
+  <div id="findReplaceModal" class="no-print modal-backdrop hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-[#111927] border border-slate-200 dark:border-slate-800 rounded-2xl max-w-md w-full p-5 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 class="text-base font-bold text-slate-900 dark:text-white">🔤 Manipulação de Texto (Invertexto)</h3>
+        <button id="btnCloseFindReplaceModal" type="button" class="text-slate-400 hover:text-slate-700 dark:hover:text-white text-sm">✕</button>
+      </div>
+
+      <div class="space-y-2.5">
+        <div class="text-xs font-semibold text-slate-500">Localizar e Substituir na Aba Atual</div>
+        <input id="findInput" type="text" placeholder="Localizar termo..." class="w-full px-3 py-1.5 text-xs rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700" />
+        <input id="replaceInput" type="text" placeholder="Substituir por..." class="w-full px-3 py-1.5 text-xs rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700" />
+        <button id="btnExecuteReplaceAll" type="button" class="w-full py-1.5 rounded-lg text-xs font-semibold bg-teal-700 text-white hover:bg-teal-800 transition">
+          Substituir Todas as Ocorrências
+        </button>
+      </div>
+
+      <div class="pt-3 border-t border-slate-200 dark:border-slate-800 space-y-2">
+        <div class="text-xs font-semibold text-slate-500">Transformações Rápidas (no texto selecionado ou aba inteira)</div>
+        <div class="grid grid-cols-2 gap-2 text-xs">
+          <button id="btnTextUpper" type="button" class="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-teal-700 hover:text-white transition font-medium">MAIÚSCULAS</button>
+          <button id="btnTextLower" type="button" class="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-teal-700 hover:text-white transition font-medium">minúsculas</button>
+          <button id="btnTextDedup" type="button" class="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-teal-700 hover:text-white transition font-medium">Remover Duplicadas</button>
+          <button id="btnTextSort" type="button" class="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-teal-700 hover:text-white transition font-medium">Ordem Alfabética (A-Z)</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- MODAL 4: HISTÓRICO LOCAL DE VERSÕES (SNAPSHOTS ANTI-PERDA)            -->
+  <!-- ===================================================================== -->
+  <div id="historyModal" class="no-print modal-backdrop hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-[#111927] border border-slate-200 dark:border-slate-800 rounded-2xl max-w-lg w-full p-5 shadow-2xl">
+      <div class="flex items-center justify-between mb-2">
+        <h3 class="text-base font-bold text-slate-900 dark:text-white">⏪ Histórico de Versões Salvas</h3>
+        <button id="btnCloseHistoryModal" type="button" class="text-slate-400 hover:text-slate-700 dark:hover:text-white text-sm">✕</button>
+      </div>
+      <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">
+        O sistema guarda snapshots automáticos antes de grandes alterações para que você nunca perca uma evolução apagada sem querer.
+      </p>
+      <div id="historyListContainer" class="space-y-2 max-h-80 overflow-y-auto pr-1"></div>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- MODAL 5: QR CODE DE PASSAGEM DE PLANTÃO                               -->
+  <!-- ===================================================================== -->
+  <div id="qrModal" class="no-print modal-backdrop hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-[#111927] border border-slate-200 dark:border-slate-800 rounded-2xl max-w-sm w-full p-5 shadow-2xl text-center">
+      <div class="flex items-center justify-between mb-2">
+        <h3 class="text-base font-bold text-slate-900 dark:text-white">📱 QR Code do Caderninho</h3>
+        <button id="btnCloseQrModal" type="button" class="text-slate-400 hover:text-slate-700 dark:hover:text-white text-sm">✕</button>
+      </div>
+      <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">
+        Aponte a câmera do celular para abrir diretamente o caderninho <code id="qrSlugLabel" class="font-mono text-teal-600">/maybekaioo</code>.
+      </p>
+      <div class="bg-white p-3 rounded-xl inline-block border border-slate-200 mb-3">
+        <img id="qrCodeImg" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="QR Code do Caderninho" class="w-44 h-44 mx-auto max-w-full h-auto" />
+      </div>
+      <div id="qrUrlText" class="text-[11px] font-mono text-slate-500 break-all"></div>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- MODAL 6: CONFIGURAÇÃO DE NUVEM (GOOGLE SHEETS + APPS SCRIPT V2)       -->
+  <!-- ===================================================================== -->
+  <div id="cloudModal" class="no-print modal-backdrop hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-[#111927] border border-slate-200 dark:border-slate-800 rounded-2xl max-w-md w-full p-5 shadow-2xl">
+      <div class="flex items-center justify-between mb-2">
+        <h3 class="text-base font-bold text-slate-900 dark:text-white">☁️ Sincronização Google Sheets (Code.gs V2)</h3>
+        <button id="btnCloseCloudModal" type="button" class="text-slate-400 hover:text-slate-700 dark:hover:text-white text-sm">✕</button>
+      </div>
+      <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">
+        Cole a URL do Web App (<code class="text-teal-600">.../exec</code>) gerada pelo seu <code class="font-mono">Code.gs</code>. O sistema sincroniza cada usuário separadamente e suporta blocos longos com proteção contra conflitos.
+      </p>
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-medium text-slate-500 mb-1">URL do Google Apps Script</label>
+          <input id="inputCloudWebhook" type="url" placeholder="https://script.google.com/macros/s/.../exec" class="w-full px-3 py-2 text-xs font-mono rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 focus:outline-none focus:border-teal-600" />
+        </div>
+        <div class="flex items-center justify-between gap-2 pt-2">
+          <button id="btnPullFromCloudNow" type="button" class="px-3 py-2 rounded-xl text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200">
+            🔄 Baixar da Nuvem
+          </button>
+          <button id="btnSaveCloudConfig" type="button" class="px-4 py-2 rounded-xl text-xs font-semibold bg-teal-700 text-white hover:bg-teal-800">
+            Salvar &amp; Sincronizar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- MODAL 7: CRIAR / RENOMEAR / EXCLUIR ABA                               -->
+  <!-- ===================================================================== -->
+  <div id="tabActionModal" class="no-print modal-backdrop hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-[#111927] border border-slate-200 dark:border-slate-800 rounded-2xl max-w-sm w-full p-5 shadow-2xl">
+      <h3 id="tabActionModalTitle" class="text-sm font-bold text-slate-900 dark:text-white mb-2">Nova Aba</h3>
+      <input id="tabActionInput" type="text" placeholder="Nome da aba (ex: Sala Vermelha, Enfermaria)" class="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 mb-3 focus:outline-none focus:border-teal-600" />
+      <p id="tabActionConfirmText" class="hidden text-xs text-slate-500 dark:text-slate-400 mb-3">Tem certeza que deseja excluir esta aba?</p>
+      <div class="flex justify-end gap-2">
+        <button id="btnCancelTabAction" type="button" class="px-3 py-1.5 rounded-lg text-xs bg-slate-100 dark:bg-slate-800 text-slate-500">Cancelar</button>
+        <button id="btnConfirmTabAction" type="button" class="px-4 py-1.5 rounded-lg text-xs font-semibold bg-teal-700 text-white">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION -->
+  <div id="toastBanner" class="no-print fixed bottom-5 right-5 z-50 hidden px-4 py-2.5 rounded-xl bg-slate-900 dark:bg-teal-600 text-white text-xs font-semibold shadow-xl">
+    Salvo com sucesso!
+  </div>
+
+  <script>
+    // =========================================================================
+    // MEU CADERNINHO DE PACIENTES // V2 ENGINE (BUG-FREE & CLINICAL REDESIGN)
+    // =========================================================================
+    const STORAGE_PREFIX = 'caderninho_v2_user_';
+    const SNAPSHOT_PREFIX = 'caderninho_v2_snaps_';
+    const REGISTRY_KEY = 'caderninho_v2_known_users';
+    const CLOUD_URL_KEY = 'caderninho_v2_cloud_url';
+    const THEME_KEY = 'caderninho_v2_theme';
+
+    // Modelos Médicos (Padrão UPA Bassani, SOAP, Sala Vermelha, Exame Normal)
+    function getClinicalSnippets() {
+      const today = new Date().toLocaleDateString('pt-BR');
+      return {
+        paciente_upa: `\n---\nLEITO 01 - NOME / INICIAIS, 00 ANOS\nDI: ${today} | HP: \nHISTÓRIA CLÍNICA: Paciente admitido com quadro de \n#HPP: Nega alergias medicamentosas conhecidas.\n#MUC: \n#EVOLUÇÃO: REG, LOTE, corado, hidratado, acianótico, anictérico, afebril.\nACV: RCR 2T BNF s/ sopros | PA: 120x80 mmHg | FC: 78 bpm\nAR: MV+ bilateral s/ RA | SpO2: 98% AA | FR: 16 irpm\nABD: Plano, flácido, RHA+, indolor à palpação, s/ VMG.\nMMII: Sem edemas, panturrilhas livres, pulsos simétricos.\n#EXAMES LABORATORIAIS: \n#EX DE IMAGEM: \n#PARECERES: \n#CD:\n- Dieta \n- Hidratação / Analgesia\n- Reavaliação laboratorial\n`,
+        soap: `\n---\nLEITO __ - NOME / INICIAIS, 00 ANOS (DI: ${today})\n#S (Subjetivo): Paciente refere \n#O (Objetivo): BEG, LOTE, eupneico em AA, afebril. PA: 120x80 mmHg | FC: 76 bpm | SpO2: 98%.\n#A (Avaliação): \n#P (Plano / Conduta):\n- \n`,
+        exame_normal: `BEG, LOTE, corado, hidratado, acianótico, anictérico, afebril ao toque.\nACV: RCR em 2T, BNF, sem sopros. TEC < 3s.\nAR: MV+ universalmente distribuído, sem ruídos adventícios. Eupneico em ar ambiente.\nABD: Plano, flácido, RHA+, indolor à palpação superficial e profunda, sem sinais de irritação peritoneal.\nNEURO: Glasgow 15, pupilas isocóricas e fotorreagentes, sem déficits focais.\nEXT: Sem edemas de MMII, panturrilhas livres e indolores.`,
+        admissao_sv: `\n---\n[SALA VERMELHA] LEITO __ - NOME, IDADE\nDI: ${today} | HP: Choque / Insuficiência Respiratória\n#HDA: \n#HPP / #MUC: \n#DISPOSITIVOS: TOT nº __ (rima __cm) | CVC em __ | SVD | SNE\n#SEDAÇÃO & DVA: Fentanil __ mL/h | Midazolam __ mL/h | Noradrenalina __ mL/h (__ mcg/kg/min)\n#VENTILAÇÃO MECÂNICA: VCV/PCV | FiO2: __% | PEEP: __ | VC: __ | FR: __\n#EXAMES LABORATORIAIS: Gaso: pH __ / pCO2 __ / pO2 __ / HCO3 __ / Lac __\n#CD:\n- Metas: PAM >= 65 mmHg, SpO2 92-96%, diurese > 0.5 mL/kg/h\n`,
+        divisor: `\n---\n`
+      };
+    }
+
+    function createInitialStore(slug) {
+      const defaultLinks = [
+        { id: 'l1', title: 'UpToDate — Suporte à Decisão Clínica', url: 'https://www.uptodate.com', category: 'Referência' },
+        { id: 'l2', title: 'MDCalc — Calculadoras e Escores Médicos', url: 'https://www.mdcalc.com', category: 'Calculadoras' },
+        { id: 'l3', title: 'Bulário Eletrônico ANVISA', url: 'https://consultas.anvisa.gov.br/#/bulario/', category: 'Farmacologia' }
+      ];
+
+      if (slug === 'bassani') {
+        return {
+          updatedAtMs: Date.now(),
+          activeTabId: 'tab_upa',
+          links: defaultLinks,
+          todos: [
+            { id: 't1', text: 'Reavaliar função renal e K+ da Sala Amarela', done: false },
+            { id: 't2', text: 'Cobrar parecer da Cirurgia Geral / Ortopedia', done: false }
+          ],
+          tabs: [
+            {
+              id: 'tab_upa',
+              title: 'SALA VERMELHA / AMARELA UPA',
+              content: `SALA VERMELHA - LEITO 01 - J.M.S., 68 ANOS\nDI: 15/11/2026 | HP: DPOC Exacerbado + PAC\nHISTÓRIA CLÍNICA: Dispneia progressiva há 3 dias, tosse produtiva purulenta e queda da saturação em domicílio.\n#HPP: DPOC tabagista 40 maços-ano, HAS.\n#MUC: Losartana 50mg 12/12h, Alenia.\n#EVOLUÇÃO: REG, LOTE, taquipneico leve em CNO2 2L/min (SpO2 92%), afebril. PA 134x82 mmHg | FC 92 bpm | FR 22 irpm.\nAR: MV globalmente reduzido com sibilos difusos e estertores crepitantes em base D.\n#EXAMES LABORATORIAIS: Hb 13.8 | Leuco 14.900 (Bast 6%) | Plaq 260k | PCR 88 | Cr 1.1 | Ur 46 | Na 137 | K 4.3\n#EX DE IMAGEM: RX Tórax: hiperinsuflação pulmonar + consolidação em base direita.\n#ATB: Ceftriaxona [16/11/2026] + Azitromicina [16/11/2026]\n#PARECERES: Sem interconsultas pendentes.\n#CD:\n- Manter Ceftriaxona 1g EV 12/12h + Azitromicina 500mg/dia\n- Corticoide sistêmico + broncodilatador horário\n- Alvo SpO2 88-92%\n---\nSALA AMARELA - LEITO 04 - M.A.O., 54 ANOS\nDI: 17/11/2026 | HP: Pielonefrite Aguda não complicada\nHISTÓRIA CLÍNICA: Dor lombar à direita associada a febre (38,6°C), calafrios e disúria há 48h.\n#HPP: DM2 em uso de Metformina. #ALERGIA: Dipirona.\n#EVOLUÇÃO: BEG, LOTE, corada, hidratada, afebril nas últimas 12h. Giordano positivo à direita. PA 118x74 mmHg | FC 80 bpm.\n#EXAMES LABORATORIAIS: Hb 12.2 | Leuco 16.400 | PCR 112 | Cr 0.9 | Ur 34 | EAS: Leucocitúria maciça, nitrito +.\n#EX DE IMAGEM: USG Rins e Vias Urinárias sem sinais de obstrução/hidronefrose.\n#CD:\n- Ciprofloxacino EV -> programar transição VO após 24h afebril\n- Controle glicêmico capilar 6/6h`
+            },
+            {
+              id: 'tab_presc',
+              title: 'Prescrições & Diluições',
+              content: `# DILUIÇÕES RÁPIDAS DE EMERGÊNCIA\n\n• Noradrenalina (4mg/4mL): 4 ampolas (16mL) + 234mL SG 5% = 250mL (64 mcg/mL)\n• Fentanil (50mcg/mL): 4 ampolas (40mL) puro ou + 60mL SF 0,9%\n• Midazolam (50mg/10mL): 3 ampolas (30mL) + 120mL SF 0,9% = 150mL (1 mg/mL)\n• Amiodarona Ataque: 150mg (3mL) + 100mL SG 5% correr em 10-15 min\n• Manutenção Amiodarona: 6 ampolas (900mg) + 482mL SG 5% (1mg/min nas primeiras 6h = 33 mL/h)`
+            }
+          ]
+        };
+      }
+
+      return {
+        updatedAtMs: Date.now(),
+        activeTabId: 'tab_plantao',
+        links: defaultLinks,
+        todos: [
+          { id: 't1', text: 'Checar 2ª curva de Troponina do Leito 01', done: false },
+          { id: 't2', text: 'Reavaliar gasometria venosa e K+ da CAD (Leito 02)', done: false }
+        ],
+        tabs: [
+          {
+            id: 'tab_plantao',
+            title: 'Passagem de Plantão (UPA)',
+            content: `[SALA VERMELHA] LEITO 01 - A.C.R., 62 ANOS\nDI: 16/11/2026 | HP: Síndrome Coronariana Aguda SSST\nHISTÓRIA CLÍNICA: Dor retroesternal em aperto há 4 horas, irradiada para MSE, associada a náuseas e sudorese.\n#HPP: HAS, Dislipidemia, ex-tabagista. #ALERGIA: AINEs.\n#MUC: Enalapril 10mg 12/12h, Sinvastatina 40mg.\n#EVOLUÇÃO: BEG, LOTE, sem dor torácica após nitrato. PA: 128x78 mmHg | FC: 68 bpm | SpO2: 97% AA.\nACV: RCR 2T BNF s/ sopros | AR: MV+ bilateral s/ RA.\n#EXAMES LABORATORIAIS (18/11): Hb 14.1 | Leuco 8.900 | Plaq 210k | Cr 1.0 | Ur 38 | Na 139 | K 4.1 | Troponina 1ª: positiva / 2ª: PENDENTE.\n#EX DE IMAGEM: ECG: Ritmo sinusal, infradesnivelamento de ST de 1,5mm em V4-V6.\n#PARECERES: Cardiologia ciente — aguarda vaga de cateterismo.\n#CD:\n- Dupla antiagregação + Anticoagulação plena com Enoxaparina\n- Seriar ECG e 2ª curva de Troponina\n- Monitorização contínua\n---\nSALA AMARELA - LEITO 02 - R.F.L., 45 ANOS\nDI: 17/11/2026 | HP: Cetoacidose Diabética (CAD) em resolução\nHISTÓRIA CLÍNICA: Poliúria, polidipsia, dor abdominal difusa e vômitos há 24h por má adesão insulínica.\n#HPP: DM1 diagnosticado aos 18 anos.\n#EVOLUÇÃO: REG -> BEG, consciente, mucosas coradas, melhora da dor abdominal. PA: 116x72 mmHg | FC: 84 bpm | HGT atual: 186 mg/dL.\n#EXAMES LABORATORIAIS: Gaso venosa: pH 7.31 | HCO3 16.4 | Ânion Gap 11 | Na 136 | K 4.0 | Cr 0.9.\n#CD:\n- Transição de bomba de insulina regular EV para Insulina NPH/Regular SC (aguardar 2h antes de desligar BI)\n- Liberar dieta oral para diabético`
+          },
+          {
+            id: 'tab_condutas',
+            title: 'Condutas & Diluições',
+            content: `# COLA RÁPIDA DE PLANTÃO (DOSES & DILUIÇÕES)\n\n1. SEDAÇÃO E INTUBAÇÃO (SEQUÊNCIA RÁPIDA - 70kg):\n- Fentanil (opcional/pré): 2-3 mcg/kg -> 3 a 4 mL EV lento\n- Etomidato (0,3 mg/kg): 1 ampola (20mg/10mL) EV em bolus\n- Cetamina (1,5-2 mg/kg): 2 a 3 mL (50mg/mL) diluído\n- Succinilcolina (1-1,5 mg/kg): 1 frasco (100mg) + 10mL AD -> fazer 7 a 10 mL EV\n- Rocurônio (1,2 mg/kg): 8,5 mL (10mg/mL) EV em bolus\n---\n2. CORREÇÃO DE HIPERCALEMIA (K+ > 6.0 ou alteração ECG):\n- Gluconato de Cálcio 10%: 1 ampola (10mL) + 100mL SF 0,9% correr em 5-10 min\n- Solução Polarizante: 10 UI Insulina Regular + 100mL SG 50% correr em 30-60 min\n- Nebulização com Fenoterol (Berotec): 10 a 20 gotas + 5mL SF 0,9%`
+          },
+          {
+            id: 'tab_rascunho',
+            title: 'Rascunho Livre',
+            content: `# RASCUNHO RÁPIDO (ESTILO INVERTEXTO)\n\nUse esta aba para colar links, lembretes pessoais, números de protocolo ou anotações rápidas entre dispositivos.`
+          }
+        ]
+      };
+    }
+
+    // Application State
+    let state = {
+      currentSlug: 'maybekaioo',
+      viewMode: 'editor', // 'editor' | 'cards' | 'links'
+      privacyBlur: false,
+      searchQuery: '',
+      cloudUrl: '',
+      tabModalMode: 'add',
+      isFetchingCloud: false,
+      store: null
+    };
+
+    let saveTimeout = null;
+    let lastSnapshotTime = 0;
+
+    // Safe Storage Helpers
+    function safeGetStorage(key, fallback = null) {
+      try {
+        const val = localStorage.getItem(key);
+        return val ? JSON.parse(val) : fallback;
+      } catch (e) {
+        return fallback;
+      }
+    }
+
+    function safeSetStorage(key, value) {
+      try {
+        localStorage.setItem(key, JSON.stringify(value));
+      } catch (e) {}
+    }
+
+    function sanitizeSlug(raw) {
+      const cleaned = String(raw || '')
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9_-]/g, '');
+      return cleaned || 'maybekaioo';
+    }
+
+    function registerKnownUser(slug) {
+      const list = safeGetStorage(REGISTRY_KEY, ['maybekaioo', 'bassani']);
+      if (!list.includes(slug)) {
+        list.unshift(slug);
+        safeSetStorage(REGISTRY_KEY, list.slice(0, 14));
+      }
+    }
+
+    // Save Automatic Local Snapshot (Anti-Data-Loss History)
+    function recordLocalSnapshot(reason = 'Auto-save') {
+      const activeTab = getActiveTab();
+      if (!activeTab || !activeTab.content.trim()) return;
+      const now = Date.now();
+      if (reason === 'Auto-save' && now - lastSnapshotTime < 45000) return;
+      lastSnapshotTime = now;
+
+      const key = SNAPSHOT_PREFIX + state.currentSlug;
+      const snaps = safeGetStorage(key, []);
+      if (snaps.length > 0 && snaps[0].content === activeTab.content) return;
+
+      snaps.unshift({
+        id: 'snap_' + now,
+        tabTitle: activeTab.title,
+        reason: reason,
+        timestamp: new Date(now).toLocaleString('pt-BR'),
+        content: activeTab.content
+      });
+      safeSetStorage(key, snaps.slice(0, 12));
+    }
+
+    // Flush any pending save before switching user (Fixes Bug #1)
+    function flushPendingSaveSync() {
+      if (saveTimeout) {
+        clearTimeout(saveTimeout);
+        saveTimeout = null;
+      }
+      if (state.store && state.currentSlug) {
+        safeSetStorage(STORAGE_PREFIX + state.currentSlug, state.store);
+      }
+    }
+
+    // Load User Notepad by Slug
+    function loadUserNotepad(slug, syncFromCloud = true) {
+      flushPendingSaveSync();
+
+      const cleanSlug = sanitizeSlug(slug);
+      state.currentSlug = cleanSlug;
+      registerKnownUser(cleanSlug);
+
+      try {
+        window.history.replaceState(null, '', '#/' + cleanSlug);
+      } catch (e) {}
+
+      const stored = safeGetStorage(STORAGE_PREFIX + cleanSlug, null);
+      if (stored && Array.isArray(stored.tabs) && stored.tabs.length > 0) {
+        if (!Array.isArray(stored.links)) stored.links = createInitialStore(cleanSlug).links;
+        if (!Array.isArray(stored.todos)) stored.todos = [];
+        state.store = stored;
+      } else {
+        state.store = createInitialStore(cleanSlug);
+        safeSetStorage(STORAGE_PREFIX + cleanSlug, state.store);
+      }
+
+      document.getElementById('currentSlugDisplay').textContent = cleanSlug;
+      renderAll();
+
+      if (syncFromCloud && state.cloudUrl) {
+        pullNotepadFromCloud(cleanSlug);
+      }
+    }
+
+    function getActiveTab() {
+      if (!state.store || !Array.isArray(state.store.tabs) || !state.store.tabs.length) return null;
+      let tab = state.store.tabs.find(t => t.id === state.store.activeTabId);
+      if (!tab) {
+        tab = state.store.tabs[0];
+        state.store.activeTabId = tab.id;
+      }
+      return tab;
+    }
+
+    // Auto-Save (Only called on actual data mutation — Fixes Bug #3)
+    function triggerAutoSave(reason = 'Auto-save') {
+      if (!state.store) return;
+      const targetSlug = state.currentSlug;
+      state.store.updatedAtMs = Date.now();
+      setSaveBadge('saving');
+      safeSetStorage(STORAGE_PREFIX + targetSlug, state.store);
+      recordLocalSnapshot(reason);
+
+      if (saveTimeout) clearTimeout(saveTimeout);
+      saveTimeout = setTimeout(() => {
+        saveTimeout = null;
+        if (state.cloudUrl && !state.isFetchingCloud) {
+          pushNotepadToCloud(targetSlug, state.store);
+        } else {
+          setSaveBadge('saved');
+        }
+      }, 650);
+    }
+
+    function setSaveBadge(status, customText = '') {
+      const dot = document.getElementById('saveStatusDot');
+      const txt = document.getElementById('saveStatusText');
+      if (status === 'saving') {
+        dot.className = 'w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse';
+        txt.textContent = customText || 'Salvando...';
+      } else if (status === 'cloud') {
+        dot.className = 'w-1.5 h-1.5 rounded-full bg-teal-600';
+        txt.textContent = customText || 'Sincronizado ☁️';
+      } else if (status === 'error') {
+        dot.className = 'w-1.5 h-1.5 rounded-full bg-rose-500';
+        txt.textContent = customText || 'Salvo Local';
+      } else {
+        dot.className = 'w-1.5 h-1.5 rounded-full bg-teal-600';
+        txt.textContent = customText || 'Salvo';
+      }
+    }
+
+    // Cloud Sync (Google Apps Script V2)
+    async function pullNotepadFromCloud(slug) {
+      if (!state.cloudUrl) return;
+      state.isFetchingCloud = true;
+      try {
+        setSaveBadge('saving', 'Sincronizando...');
+        const url = `${state.cloudUrl}?action=load&user=${encodeURIComponent(slug)}`;
+        const res = await fetch(url);
+        const json = await res.json();
+        if (slug !== state.currentSlug) return; // Evita condição de corrida se trocou de usuário
+
+        if (json && json.ok && json.found && json.data && Array.isArray(json.data.tabs)) {
+          const serverMs = Number(json.updatedAtMs) || 0;
+          const localMs = Number(state.store && state.store.updatedAtMs) || 0;
+          if (serverMs >= localMs || localMs === 0) {
+            recordLocalSnapshot('Backup pré-nuvem');
+            state.store = json.data;
+            state.store.updatedAtMs = serverMs || Date.now();
+            if (!Array.isArray(state.store.links)) state.store.links = [];
+            if (!Array.isArray(state.store.todos)) state.store.todos = [];
+            safeSetStorage(STORAGE_PREFIX + slug, state.store);
+            renderAll();
+          }
+          setSaveBadge('cloud');
+        } else {
+          setSaveBadge('saved');
+        }
+      } catch (e) {
+        setSaveBadge('error');
+      } finally {
+        state.isFetchingCloud = false;
+      }
+    }
+
+    async function pushNotepadToCloud(slugToSave, storeSnapshot) {
+      if (!state.cloudUrl) return;
+      try {
+        const res = await fetch(state.cloudUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({
+            action: 'save',
+            user: slugToSave,
+            baseUpdatedAtMs: storeSnapshot.updatedAtMs || 0,
+            force: true,
+            data: storeSnapshot
+          })
+        });
+        const json = await res.json();
+        if (json && json.ok) {
+          setSaveBadge('cloud');
+        } else {
+          setSaveBadge('error', json && json.error ? 'Limite Nuvem' : 'Salvo Local');
+          if (json && json.error) showToast(json.error);
+        }
+      } catch (e) {
+        setSaveBadge('error');
+      }
+    }
+
+    // =========================================================================
+    // CLINICAL PARSER: AUTO DAY COUNTER (DI / ATB), SEVERITY & RED FLAGS
+    // =========================================================================
+    function calculateDaysSinceDateString(dateStr) {
+      // Aceita DD/MM/AAAA ou DD/MM
+      const m = String(dateStr || '').match(/\b(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?\b/);
+      if (!m) return null;
+      const day = parseInt(m[1], 10);
+      const month = parseInt(m[2], 10) - 1;
+      const now = new Date();
+      let year = m[3] ? parseInt(m[3], 10) : now.getFullYear();
+      if (year < 100) year += 2000;
+
+      const start = new Date(year, month, day);
+      if (isNaN(start.getTime())) return null;
+      const todayMid = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const diffDays = Math.floor((todayMid - start) / 86400000);
+      return diffDays >= 0 && diffDays <= 365 ? diffDays : null;
+    }
+
+    function detectSeverity(text) {
+      const upper = text.toUpperCase();
+      if (/SALA VERMELHA|CHOQUE|INTUBAD|TOT\b|NORADRENALINA|GRAVE|PCR|IOT\b/.test(upper)) {
+        return { level: 'red', label: 'Sala Vermelha / Crítico', border: 'border-l-4 border-l-rose-600', badge: 'bg-rose-50 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800' };
+      }
+      if (/SALA AMARELA|OBSERVAÇÃO|CETOACIDOSE|SEPSE|PIELONEFRITE|DPOC/.test(upper)) {
+        return { level: 'amber', label: 'Sala Amarela / Prioridade', border: 'border-l-4 border-l-amber-500', badge: 'bg-amber-50 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800' };
+      }
+      return { level: 'teal', label: 'Leito / Evolução', border: 'border-l-4 border-l-teal-600', badge: 'bg-teal-50 dark:bg-teal-950/80 text-teal-700 dark:text-teal-300 border-teal-200 dark:border-teal-800' };
+    }
+
+    function parsePatientBlocks(rawText) {
+      const text = String(rawText || '');
+      const segments = text.split(/\n?\s*---+\s*\n?/g);
+      const blocks = [];
+      let currentOffset = 0;
+
+      segments.forEach((seg, idx) => {
+        const trimmed = seg.trim();
+        if (!trimmed) return;
+        const lines = trimmed.split('\n');
+        const firstLine = (lines[0] || `Leito #${idx + 1}`).replace(/^#+\s*/, '').trim();
+        const hpLine = lines.find(l => /\b(HP|HD|DIAGNÓSTICO):/i.test(l)) || '';
+        const diLine = lines.find(l => /\bDI:\s*(\d{1,2}\/\d{1,2}(?:\/\d{2,4})?)/i.test(l)) || '';
+        const diDays = diLine ? calculateDaysSinceDateString(diLine) : null;
+        const hasAllergy = /#?ALERGIA/i.test(trimmed) && !/NEGA ALERGIA/i.test(trimmed);
+        const hasPending = /\bPENDENTE\b/i.test(trimmed);
+
+        const pos = text.indexOf(seg, currentOffset);
+        if (pos !== -1) currentOffset = pos + seg.length;
+
+        // Calculate line number for accurate textarea scroll (Fixes Bug #2)
+        const lineStart = text.slice(0, pos !== -1 ? pos : 0).split('\n').length - 1;
+
+        blocks.push({
+          index: blocks.length + 1,
+          title: firstLine.slice(0, 70),
+          subtitle: hpLine.trim().slice(0, 85),
+          diDays: diDays,
+          hasAllergy: hasAllergy,
+          hasPending: hasPending,
+          severity: detectSeverity(trimmed),
+          raw: trimmed,
+          charStart: pos !== -1 ? pos : 0,
+          lineStart: Math.max(0, lineStart)
+        });
+      });
+      return blocks;
+    }
+
+    // =========================================================================
+    // UI RENDERING
+    // =========================================================================
+    function renderAll() {
+      renderTabs();
+      renderEditorAndStats();
+      renderOutlineSidebar();
+      renderTodos();
+      renderCardsView();
+      renderLinksView();
+      renderPrintSheet();
+    }
+
+    function renderTabs() {
+      const container = document.getElementById('tabsListContainer');
+      container.innerHTML = '';
+      const activeTab = getActiveTab();
+
+      state.store.tabs.forEach(tab => {
+        const isActive = activeTab && tab.id === activeTab.id;
+        const blocksCount = parsePatientBlocks(tab.content).length;
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = isActive
+          ? 'w-full px-3 py-2 rounded-xl text-xs font-bold bg-teal-700 text-white flex items-center justify-between shadow-2xs transition'
+          : 'w-full px-3 py-2 rounded-xl text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/80 flex items-center justify-between transition';
+        btn.innerHTML = `
+          <span class="truncate pr-2">${escapeHtml(tab.title)}</span>
+          <span class="text-[10px] font-mono px-1.5 py-0.5 rounded ${isActive ? 'bg-teal-800 text-teal-100' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}">${blocksCount}</span>
+        `;
+        btn.addEventListener('click', () => {
+          state.store.activeTabId = tab.id;
+          safeSetStorage(STORAGE_PREFIX + state.currentSlug, state.store); // Salva aba ativa localmente sem disparar push falso na nuvem
+          renderAll();
+        });
+        container.appendChild(btn);
+      });
+    }
+
+    function renderEditorAndStats() {
+      const activeTab = getActiveTab();
+      const editor = document.getElementById('mainNotepadEditor');
+      const titleLabel = document.getElementById('activeTabTitleLabel');
+      const btnDelete = document.getElementById('btnDeleteTab');
+
+      if (!activeTab) return;
+      titleLabel.textContent = activeTab.title;
+      btnDelete.style.display = state.store.tabs.length > 1 ? 'inline-block' : 'none';
+
+      if (editor.value !== activeTab.content) {
+        editor.value = activeTab.content;
+      }
+
+      updateStatsCounters(activeTab.content);
+    }
+
+    function updateStatsCounters(content) {
+      const text = String(content || '');
+      const blocks = parsePatientBlocks(text);
+      const trimmed = text.trim();
+      const words = trimmed ? trimmed.split(/\s+/).length : 0;
+      const lines = text ? text.split('\n').length : 0;
+      const chars = text.length;
+
+      document.getElementById('statBlocksCount').textContent = `${blocks.length} ${blocks.length === 1 ? 'leito' : 'leitos'}`;
+      document.getElementById('statWordsCount').textContent = `${words} palavras`;
+      document.getElementById('statLinesCount').textContent = `${lines} linhas`;
+      document.getElementById('statCharsCount').textContent = `${chars} caracteres`;
+      document.getElementById('sidebarBlockBadge').textContent = String(blocks.length);
+      document.getElementById('topBedsCount').textContent = String(blocks.length);
+    }
+
+    function renderOutlineSidebar() {
+      const activeTab = getActiveTab();
+      const container = document.getElementById('outlineListContainer');
+      container.innerHTML = '';
+      if (!activeTab) return;
+
+      const blocks = parsePatientBlocks(activeTab.content);
+      const q = state.searchQuery.trim().toLowerCase();
+      const filtered = q ? blocks.filter(b => b.raw.toLowerCase().includes(q)) : blocks;
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<div class="text-xs text-slate-400 py-4 text-center">Nenhum paciente encontrado.</div>`;
+        return;
+      }
+
+      filtered.forEach(block => {
+        const item = document.createElement('div');
+        item.className = `p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 ${block.severity.border} hover:border-teal-600/50 transition flex items-start justify-between gap-2`;
+
+        const leftBtn = document.createElement('button');
+        leftBtn.type = 'button';
+        leftBtn.className = 'text-left flex-1 min-w-0';
+        leftBtn.innerHTML = `
+          <div class="flex items-center gap-1.5">
+            <span class="blur-sensitive text-xs font-bold text-slate-800 dark:text-slate-100 truncate">${escapeHtml(block.title)}</span>
+          </div>
+          ${block.subtitle ? `<div class="blur-sensitive text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">${escapeHtml(block.subtitle)}</div>` : ''}
+          <div class="flex flex-wrap items-center gap-1 mt-1">
+            ${block.diDays !== null ? `<span class="text-[10px] font-mono px-1.5 py-0.2 rounded bg-teal-500/10 text-teal-700 dark:text-teal-300 font-semibold">DI: D${block.diDays}</span>` : ''}
+            ${block.hasAllergy ? `<span class="text-[10px] font-mono px-1.5 py-0.2 rounded bg-rose-500/15 text-rose-600 dark:text-rose-400 font-bold">⚠️ ALERGIA</span>` : ''}
+            ${block.hasPending ? `<span class="text-[10px] font-mono px-1.5 py-0.2 rounded bg-amber-500/15 text-amber-700 dark:text-amber-300 font-semibold">⏳ PENDENTE</span>` : ''}
+          </div>
+        `;
+        leftBtn.addEventListener('click', () => {
+          if (state.viewMode !== 'editor') setViewMode('editor');
+          const editor = document.getElementById('mainNotepadEditor');
+          editor.focus();
+          editor.setSelectionRange(block.charStart, block.charStart);
+          // Rola precisamente até a linha do paciente no textarea (Fixes Bug #2)
+          const lineHeight = 22;
+          editor.scrollTop = Math.max(0, block.lineStart * lineHeight - 40);
+        });
+
+        const copyBtn = document.createElement('button');
+        copyBtn.type = 'button';
+        copyBtn.className = 'px-2 py-1 rounded-lg text-[11px] font-semibold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-teal-700 hover:text-white transition shrink-0';
+        copyBtn.textContent = 'Copiar';
+        copyBtn.addEventListener('click', () => {
+          copyTextToClipboard(block.raw, `Leito "${block.title.slice(0, 22)}" copiado!`);
+        });
+
+        item.appendChild(leftBtn);
+        item.appendChild(copyBtn);
+        container.appendChild(item);
+      });
+    }
+
+    function renderCardsView() {
+      const activeTab = getActiveTab();
+      const grid = document.getElementById('parsedCardsGrid');
+      grid.innerHTML = '';
+      if (!activeTab) return;
+
+      const blocks = parsePatientBlocks(activeTab.content);
+      const q = state.searchQuery.trim().toLowerCase();
+      const filtered = q ? blocks.filter(b => b.raw.toLowerCase().includes(q)) : blocks;
+
+      if (filtered.length === 0) {
+        grid.innerHTML = `<div class="col-span-full p-8 text-center rounded-xl border border-dashed border-slate-300 dark:border-slate-800 text-sm text-slate-400">Nenhum leito encontrado na aba atual.</div>`;
+        return;
+      }
+
+      filtered.forEach(block => {
+        const card = document.createElement('div');
+        card.className = `bg-white dark:bg-[#0F172A] border border-slate-200 dark:border-slate-800 ${block.severity.border} rounded-xl p-4 shadow-2xs flex flex-col justify-between gap-3`;
+
+        const formattedHtml = formatClinicalTextToHtml(block.raw);
+
+        card.innerHTML = `
+          <div>
+            <div class="flex items-start justify-between gap-2 pb-2.5 mb-2.5 border-b border-slate-100 dark:border-slate-800">
+              <div>
+                <div class="flex flex-wrap items-center gap-1.5 mb-1">
+                  <span class="text-[10px] font-mono uppercase px-2 py-0.5 rounded border ${block.severity.badge} font-semibold">${block.severity.label}</span>
+                  ${block.diDays !== null ? `<span class="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold">Internação: D${block.diDays}</span>` : ''}
+                  ${block.hasAllergy ? `<span class="text-[10px] font-mono px-2 py-0.5 rounded bg-rose-600 text-white font-bold">⚠️ ALERGIA</span>` : ''}
+                </div>
+                <h3 class="blur-sensitive text-sm font-bold text-slate-900 dark:text-white">${escapeHtml(block.title)}</h3>
+              </div>
+              <button type="button" class="card-copy-btn px-3 py-1 rounded-lg text-xs font-semibold bg-teal-50 dark:bg-teal-950 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-800 hover:bg-teal-700 hover:text-white transition shrink-0">
+                📋 Copiar p/ PEP
+              </button>
+            </div>
+            <div class="blur-sensitive clinical-mono text-xs text-slate-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed">${formattedHtml}</div>
+          </div>
+        `;
+
+        card.querySelector('.card-copy-btn').addEventListener('click', () => {
+          copyTextToClipboard(block.raw, `Leito "${block.title.slice(0, 24)}" copiado!`);
+        });
+
+        grid.appendChild(card);
+      });
+    }
+
+    // Strict line-anchored regex for clinical headers + automatic [DD/MM/AAAA] day badges (Fixes Bug #4)
+    function formatClinicalTextToHtml(raw) {
+      let html = escapeHtml(raw);
+
+      // Destaca tags clínicas apenas no início de linha ou após espaço/pipe
+      html = html.replace(
+        /(^|\n|\|\s*)(#\s*[A-ZÇÃÕÁÉÍÓÚÊÔa-zçãõáéíóúêô0-9_ ()/]+:|HISTÓRIA CLÍNICA:|DI:|HP:|ACV:|AR:|ABD:|MMII:|NEURO:|EXT:)/g,
+        '$1<strong class="text-teal-700 dark:text-teal-400 font-semibold">$2</strong>'
+      );
+
+      // Calcula dias automaticamente para datas entre colchetes ex: Ceftriaxona [15/11/2026]
+      html = html.replace(/\[(\d{1,2}\/\d{1,2}(?:\/\d{2,4})?)\]/g, (full, dateStr) => {
+        const d = calculateDaysSinceDateString(dateStr);
+        return d !== null
+          ? `<span class="px-1.5 py-0.5 rounded bg-teal-500/15 text-teal-700 dark:text-teal-300 font-semibold">[${dateStr} • D${d}]</span>`
+          : full;
+      });
+
+      // Destaca alertas críticos (Red Flags)
+      html = html.replace(/\b(PENDENTE|ALERGIA|CHOQUE|INTUBADO)\b/gi, '<span class="px-1 rounded bg-rose-500/15 text-rose-600 dark:text-rose-400 font-bold">$1</span>');
+
+      return html;
+    }
+
+    function renderLinksView() {
+      const container = document.getElementById('linksGridContainer');
+      container.innerHTML = '';
+      const links = (state.store && state.store.links) || [];
+
+      if (links.length === 0) {
+        container.innerHTML = `<div class="col-span-full text-xs text-slate-400 py-6 text-center">Nenhum link salvo ainda. Adicione acima.</div>`;
+        return;
+      }
+
+      links.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-start justify-between gap-2';
+        card.innerHTML = `
+          <div class="min-w-0">
+            <span class="inline-block text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded bg-teal-500/10 text-teal-700 dark:text-teal-300 mb-1">${escapeHtml(item.category || 'Geral')}</span>
+            <a href="${escapeHtml(item.url)}" target="_blank" rel="noopener noreferrer" class="block text-xs font-bold text-slate-800 dark:text-slate-100 hover:text-teal-600 truncate">${escapeHtml(item.title)} ↗</a>
+            <div class="text-[11px] font-mono text-slate-400 truncate">${escapeHtml(item.url)}</div>
+          </div>
+          <button type="button" class="text-slate-400 hover:text-rose-500 text-xs shrink-0" title="Remover link">✕</button>
+        `;
+        card.querySelector('button').addEventListener('click', () => {
+          state.store.links = state.store.links.filter(l => l.id !== item.id);
+          triggerAutoSave('Remover link');
+          renderLinksView();
+        });
+        container.appendChild(card);
+      });
+    }
+
+    function renderPrintSheet() {
+      const activeTab = getActiveTab();
+      if (!activeTab) return;
+      document.getElementById('printHeaderSubtitle').textContent = `Caderninho: /${state.currentSlug} • Setor: ${activeTab.title}`;
+      document.getElementById('printHeaderDate').textContent = `Impresso em: ${new Date().toLocaleString('pt-BR')}`;
+
+      const container = document.getElementById('printCardsContainer');
+      container.innerHTML = '';
+      const blocks = parsePatientBlocks(activeTab.content);
+      blocks.forEach(b => {
+        const div = document.createElement('div');
+        div.className = 'print-card whitespace-pre-wrap';
+        div.textContent = b.raw;
+        container.appendChild(div);
+      });
+    }
+
+    function renderTodos() {
+      const container = document.getElementById('todoListContainer');
+      container.innerHTML = '';
+      const todos = (state.store && state.store.todos) || [];
+
+      if (todos.length === 0) {
+        container.innerHTML = `<div class="text-xs text-slate-400 py-2 text-center">Nenhuma pendência no turno.</div>`;
+        return;
+      }
+
+      todos.forEach(todo => {
+        const row = document.createElement('label');
+        row.className = 'flex items-center justify-between gap-2 p-2 rounded-lg bg-slate-50 dark:bg-slate-900/70 border border-slate-200/70 dark:border-slate-800 text-xs cursor-pointer';
+        row.innerHTML = `
+          <div class="flex items-center gap-2 min-w-0">
+            <input type="checkbox" ${todo.done ? 'checked' : ''} class="accent-teal-700 rounded" />
+            <span class="blur-sensitive ${todo.done ? 'line-through text-slate-400' : 'text-slate-700 dark:text-slate-200'} truncate">${escapeHtml(todo.text)}</span>
+          </div>
+        `;
+        const checkbox = row.querySelector('input');
+        checkbox.addEventListener('change', () => {
+          todo.done = checkbox.checked;
+          triggerAutoSave('Pendência atualizada');
+          renderTodos();
+        });
+        container.appendChild(row);
+      });
+    }
+
+    function setViewMode(mode) {
+      state.viewMode = mode;
+      const pEditor = document.getElementById('viewEditorPanel');
+      const pCards = document.getElementById('viewCardsPanel');
+      const pLinks = document.getElementById('viewLinksPanel');
+
+      const bEditor = document.getElementById('btnViewEditor');
+      const bCards = document.getElementById('btnViewCards');
+      const bLinks = document.getElementById('btnViewLinks');
+
+      const activeCls = 'px-2.5 py-1 rounded-md font-semibold bg-white dark:bg-slate-800 text-teal-700 dark:text-teal-400 shadow-2xs transition';
+      const idleCls = 'px-2.5 py-1 rounded-md font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition';
+
+      pEditor.classList.toggle('hidden', mode !== 'editor');
+      pCards.classList.toggle('hidden', mode !== 'cards');
+      pCards.classList.toggle('flex', mode === 'cards');
+      pLinks.classList.toggle('hidden', mode !== 'links');
+      pLinks.classList.toggle('flex', mode === 'links');
+
+      bEditor.className = mode === 'editor' ? activeCls : idleCls;
+      bCards.className = mode === 'cards' ? activeCls : idleCls;
+      bLinks.className = mode === 'links' ? activeCls : idleCls;
+
+      if (mode === 'cards') renderCardsView();
+      if (mode === 'links') renderLinksView();
+    }
+
+    // Nullish coalescing ?? fixes cursor position 0 bug (Fixes Bug #5)
+    function insertAtCursor(textToInsert) {
+      if (state.viewMode !== 'editor') setViewMode('editor');
+      const editor = document.getElementById('mainNotepadEditor');
+      const activeTab = getActiveTab();
+      if (!activeTab) return;
+
+      const start = editor.selectionStart ?? editor.value.length;
+      const end = editor.selectionEnd ?? editor.value.length;
+      const before = editor.value.substring(0, start);
+      const after = editor.value.substring(end);
+
+      editor.value = before + textToInsert + after;
+      activeTab.content = editor.value;
+
+      const newPos = start + textToInsert.length;
+      editor.focus();
+      editor.setSelectionRange(newPos, newPos);
+
+      updateStatsCounters(activeTab.content);
+      renderOutlineSidebar();
+      renderPrintSheet();
+      triggerAutoSave('Inserção de modelo');
+    }
+
+    function copyTextToClipboard(text, toastMsg = 'Copiado!') {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => showToast(toastMsg)).catch(() => fallbackCopy(text, toastMsg));
+      } else {
+        fallbackCopy(text, toastMsg);
+      }
+    }
+
+    function fallbackCopy(text, toastMsg) {
+      const temp = document.createElement('textarea');
+      temp.value = text;
+      temp.style.position = 'fixed';
+      temp.style.opacity = '0';
+      document.body.appendChild(temp);
+      temp.select();
+      try {
+        document.execCommand('copy');
+        showToast(toastMsg);
+      } catch (e) {}
+      document.body.removeChild(temp);
+    }
+
+    let toastTimer = null;
+    function showToast(msg) {
+      const banner = document.getElementById('toastBanner');
+      banner.textContent = msg;
+      banner.classList.remove('hidden');
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => banner.classList.add('hidden'), 2500);
+    }
+
+    function escapeHtml(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    // =========================================================================
+    // CALCULATORS & INVERTEXTO TOOLS LOGIC (Fixes NaN/Stale Input Bugs)
+    // =========================================================================
+    function updateCalculators() {
+      // 1. Cockcroft-Gault
+      const age = parseFloat(document.getElementById('cgAge').value);
+      const weight = parseFloat(document.getElementById('cgWeight').value);
+      const cr = parseFloat(document.getElementById('cgCr').value);
+      const sex = document.getElementById('cgSex').value;
+      const cgEl = document.getElementById('cgResultText');
+      if (age > 0 && weight > 0 && cr > 0) {
+        let clcr = ((140 - age) * weight) / (72 * cr);
+        if (sex === 'F') clcr *= 0.85;
+        cgEl.textContent = `ClCr (Cockcroft-Gault): ${clcr.toFixed(1)} mL/min`;
+      } else {
+        cgEl.textContent = 'Preencha idade, peso e creatinina válidos.';
+      }
+
+      // 2. Corrected Sodium & Osmolarity
+      const na = parseFloat(document.getElementById('naMeasured').value);
+      const gluc = parseFloat(document.getElementById('naGlucose').value) || 0;
+      const urea = parseFloat(document.getElementById('naUrea').value) || 0;
+      const naEl = document.getElementById('naResultText');
+      if (na > 0) {
+        const naCorr = na + 0.016 * Math.max(0, gluc - 100);
+        const osmEf = 2 * na + gluc / 18;
+        const osmTot = osmEf + urea / 6;
+        naEl.textContent = `Na corrigido: ${naCorr.toFixed(1)} mEq/L | Osm efetiva: ${osmEf.toFixed(1)} mOsm/L (Total: ${osmTot.toFixed(1)})`;
+      } else {
+        naEl.textContent = 'Informe o Sódio medido para calcular.';
+      }
+
+      // 3. Vasopressor pump
+      const conc = parseFloat(document.getElementById('vasoPreset').value);
+      const vWeight = parseFloat(document.getElementById('vasoWeight').value);
+      const rate = parseFloat(document.getElementById('vasoRate').value);
+      const vasoEl = document.getElementById('vasoResultText');
+      if (vWeight > 0 && rate >= 0) {
+        const mcgKgMin = (rate * conc) / 60 / vWeight;
+        vasoEl.textContent = `Dose: ${mcgKgMin.toFixed(2)} mcg/kg/min (Vazão: ${rate} mL/h)`;
+      } else {
+        vasoEl.textContent = 'Informe o peso e a vazão da bomba (mL/h).';
+      }
+
+      // 4. IMC + Peso Predito VM + Superfície Corporal (Mosteller)
+      const bw = parseFloat(document.getElementById('bmiWeight').value);
+      const bh = parseFloat(document.getElementById('bmiHeight').value);
+      const bSex = document.getElementById('bmiSex').value;
+      const bmiEl = document.getElementById('bmiResultText');
+      if (bw > 0 && bh > 40) {
+        const hm = bh / 100;
+        const bmi = bw / (hm * hm);
+        const bsa = Math.sqrt((bw * bh) / 3600);
+        const pbw = (bSex === 'M' ? 50 : 45.5) + 0.91 * (bh - 152.4);
+        const vt6 = Math.max(150, Math.round(pbw * 6));
+        bmiEl.textContent = `IMC: ${bmi.toFixed(1)} kg/m² | SC: ${bsa.toFixed(2)} m² | Peso Predito: ${pbw.toFixed(1)}kg (VC 6mL/kg = ${vt6} mL)`;
+      } else {
+        bmiEl.textContent = 'Informe peso (kg) e altura (cm).';
+      }
+
+      // 5. CURB-65
+      const checks = document.querySelectorAll('.curb-check:checked').length;
+      let risk = 'Baixo risco (considerar tratamento ambulatorial)';
+      if (checks === 2) risk = 'Risco moderado (considerar internação / observação)';
+      if (checks >= 3) risk = 'Alto risco (internação hospitalar / UTI se >= 4)';
+      document.getElementById('curbResultText').textContent = `CURB-65: ${checks} pt(s) — ${risk}`;
+    }
+
+    function updateClinicalDatesTab() {
+      // 1. Day Counter
+      const startVal = document.getElementById('dateStartInput').value;
+      const targetDays = parseInt(document.getElementById('dateTargetDays').value, 10) || 7;
+      const outEl = document.getElementById('dateCountResult');
+      if (startVal) {
+        const parts = startVal.split('-');
+        const start = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const diff = Math.floor((today - start) / 86400000);
+        outEl.textContent = `Hoje é D${diff} (Ciclo: D${diff}/${targetDays} • Início em ${start.toLocaleDateString('pt-BR')})`;
+      } else {
+        outEl.textContent = 'Selecione a data inicial.';
+      }
+
+      // 2. Gestational Age (DUM)
+      const dumVal = document.getElementById('obDumInput').value;
+      const obEl = document.getElementById('obResultText');
+      if (dumVal) {
+        const p = dumVal.split('-');
+        const dum = new Date(parseInt(p[0], 10), parseInt(p[1], 10) - 1, parseInt(p[2], 10));
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const totalDays = Math.floor((today - dum) / 86400000);
+        if (totalDays >= 0 && totalDays <= 310) {
+          const weeks = Math.floor(totalDays / 7);
+          const days = totalDays % 7;
+          const dpp = new Date(dum.getTime() + 280 * 86400000);
+          obEl.textContent = `IG: ${weeks}s ${days}d | DPP: ${dpp.toLocaleDateString('pt-BR')}`;
+        } else {
+          obEl.textContent = 'DUM fora do intervalo gestacional habitual.';
+        }
+      }
+
+      // 3. Exact Age
+      const dnVal = document.getElementById('birthDateInput').value;
+      const ageEl = document.getElementById('ageResultText');
+      if (dnVal) {
+        const p = dnVal.split('-');
+        const birth = new Date(parseInt(p[0], 10), parseInt(p[1], 10) - 1, parseInt(p[2], 10));
+        const now = new Date();
+        let years = now.getFullYear() - birth.getFullYear();
+        let months = now.getMonth() - birth.getMonth();
+        let days = now.getDate() - birth.getDate();
+        if (days < 0) {
+          months--;
+          days += new Date(now.getFullYear(), now.getMonth(), 0).getDate();
+        }
+        if (months < 0) {
+          years--;
+          months += 12;
+        }
+        ageEl.textContent = `Idade: ${years} anos, ${months} meses e ${days} dias`;
+      }
+    }
+
+    // Smart Lab Extractor (MV/Tasy Raw Text -> Standard Abbreviations)
+    function autoExtractLabsFromRawText() {
+      const raw = document.getElementById('labRawPaste').value;
+      if (!raw.trim()) return;
+
+      const patterns = [
+        { id: 'labHb', re: /(?:hemoglobina|\bhb\b)\s*[:=-]?\s*([\d.,]+)/i },
+        { id: 'labHt', re: /(?:hemat[oó]crito|\bht\b)\s*[:=-]?\s*([\d.,]+%?)/i },
+        { id: 'labLeuco', re: /(?:leuc[oó]citos|\bleuco\b)\s*[:=-]?\s*([\d.,]+)/i },
+        { id: 'labPlaq', re: /(?:plaquetas|\bplaq\b)\s*[:=-]?\s*([\d.,]+k?)/i },
+        { id: 'labPcr', re: /(?:prote[ií]na c reativa|\bpcr\b)\s*[:=-]?\s*([\d.,]+)/i },
+        { id: 'labCr', re: /(?:creatinina|\bcr\b)\s*[:=-]?\s*([\d.,]+)/i },
+        { id: 'labUr', re: /(?:ureia|\bur\b)\s*[:=-]?\s*([\d.,]+)/i },
+        { id: 'labNa', re: /(?:s[oó]dio|\bna\b)\s*[:=-]?\s*([\d.,]+)/i },
+        { id: 'labK', re: /(?:pot[aá]ssio|\bk\b)\s*[:=-]?\s*([\d.,]+)/i }
+      ];
+
+      patterns.forEach(item => {
+        const m = raw.match(item.re);
+        if (m && m[1]) {
+          document.getElementById(item.id).value = m[1].replace(',', '.');
+        }
+      });
+
+      document.getElementById('labRawPaste').value = '';
+      updateLabPreview();
+      showToast('Exames reconhecidos e preenchidos!');
+    }
+
+    function updateLabPreview() {
+      const d = document.getElementById('labDate').value.trim();
+      const pairs = [
+        ['Hb', document.getElementById('labHb').value.trim()],
+        ['Ht', document.getElementById('labHt').value.trim()],
+        ['Leuco', document.getElementById('labLeuco').value.trim()],
+        ['Plaq', document.getElementById('labPlaq').value.trim()],
+        ['PCR', document.getElementById('labPcr').value.trim()],
+        ['Cr', document.getElementById('labCr').value.trim()],
+        ['Ur', document.getElementById('labUr').value.trim()],
+        ['Na', document.getElementById('labNa').value.trim()],
+        ['K', document.getElementById('labK').value.trim()],
+        ['TGO/TGP', document.getElementById('labTrans').value.trim()],
+        ['', document.getElementById('labExtra').value.trim()]
+      ];
+      const parts = pairs
+        .filter(([, val]) => val.length > 0)
+        .map(([k, val]) => (k ? `${k} ${val}` : val));
+
+      const rawPaste = document.getElementById('labRawPaste').value.trim();
+      if (rawPaste) {
+        parts.push(rawPaste.replace(/\s*\n\s*/g, ' | '));
+      }
+
+      const header = d ? `# EXAMES LABORATORIAIS (${d}): ` : `# EXAMES LABORATORIAIS: `;
+      document.getElementById('labPreviewOutput').textContent = header + parts.join(' | ');
+    }
+
+    // Diff Evolution Comparison (Invertexto Comparar Textos)
+    function runEvolutionDiff() {
+      const oldLines = document.getElementById('diffTextOld').value.split('\n');
+      const newLines = document.getElementById('diffTextNew').value.split('\n');
+      const container = document.getElementById('diffOutputContainer');
+      container.innerHTML = '';
+
+      const oldSet = new Set(oldLines.map(l => l.trim()).filter(Boolean));
+      const newSet = new Set(newLines.map(l => l.trim()).filter(Boolean));
+
+      oldLines.forEach(line => {
+        const t = line.trim();
+        if (!t) return;
+        if (!newSet.has(t)) {
+          const div = document.createElement('div');
+          div.className = 'px-2 py-0.5 rounded bg-rose-500/15 text-rose-700 dark:text-rose-300 line-through';
+          div.textContent = '- ' + t;
+          container.appendChild(div);
+        }
+      });
+
+      newLines.forEach(line => {
+        const t = line.trim();
+        if (!t) return;
+        const div = document.createElement('div');
+        if (!oldSet.has(t)) {
+          div.className = 'px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 font-semibold';
+          div.textContent = '+ ' + t;
+        } else {
+          div.className = 'px-2 py-0.5 text-slate-500';
+          div.textContent = '  ' + t;
+        }
+        container.appendChild(div);
+      });
+
+      if (!container.children.length) {
+        container.innerHTML = `<div class="text-slate-400 text-center py-3">Cole dois textos acima para comparar.</div>`;
+      }
+    }
+
+    // Populate History Modal
+    function renderHistoryModal() {
+      const container = document.getElementById('historyListContainer');
+      container.innerHTML = '';
+      const snaps = safeGetStorage(SNAPSHOT_PREFIX + state.currentSlug, []);
+
+      if (snaps.length === 0) {
+        container.innerHTML = `<div class="text-xs text-slate-400 py-6 text-center">Nenhum snapshot registrado ainda neste navegador.</div>`;
+        return;
+      }
+
+      snaps.forEach(snap => {
+        const card = document.createElement('div');
+        card.className = 'p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2';
+        card.innerHTML = `
+          <div class="min-w-0">
+            <div class="text-xs font-bold text-slate-800 dark:text-slate-100">${escapeHtml(snap.tabTitle)} • <span class="font-normal text-slate-500">${escapeHtml(snap.timestamp)}</span></div>
+            <div class="text-[11px] font-mono text-slate-400 truncate">${escapeHtml(snap.content.slice(0, 90))}</div>
+          </div>
+          <button type="button" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-teal-700 text-white hover:bg-teal-800 shrink-0">Restaurar</button>
+        `;
+        card.querySelector('button').addEventListener('click', () => {
+          const activeTab = getActiveTab();
+          if (activeTab) {
+            activeTab.content = snap.content;
+            triggerAutoSave('Restauração de histórico');
+            renderAll();
+            document.getElementById('historyModal').classList.add('hidden');
+            showToast('Versão restaurada na aba atual!');
+          }
+        });
+        container.appendChild(card);
+      });
+    }
+
+    function renderSavedUsersPills() {
+      const container = document.getElementById('savedUsersPills');
+      container.innerHTML = '';
+      const users = safeGetStorage(REGISTRY_KEY, ['maybekaioo', 'bassani']);
+      users.forEach(u => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = u === state.currentSlug
+          ? 'px-2.5 py-1 rounded-lg text-xs font-mono bg-teal-700 text-white font-semibold'
+          : 'px-2.5 py-1 rounded-lg text-xs font-mono bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-teal-500/20';
+        btn.textContent = '/' + u;
+        btn.addEventListener('click', () => {
+          document.getElementById('userModal').classList.add('hidden');
+          loadUserNotepad(u);
+          showToast(`Caderninho /${u} aberto!`);
+        });
+        container.appendChild(btn);
+      });
+    }
+
+    // Close all modals/drawers on Escape or backdrop click (Fixes Bug #6)
+    function closeAllModals() {
+      ['userModal', 'labModal', 'findReplaceModal', 'historyModal', 'qrModal', 'cloudModal', 'tabActionModal', 'toolsDrawerBackdrop'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.add('hidden');
+      });
+    }
+
+    // =========================================================================
+    // INITIALIZATION & EVENT BINDINGS
+    // =========================================================================
+    window.addEventListener('DOMContentLoaded', () => {
+      // Default Theme: Clinical Paper Light (unless user explicitly chose dark)
+      const savedTheme = safeGetStorage(THEME_KEY, 'light');
+      if (savedTheme === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+
+      // Initialize Date Pickers in Calculators
+      const todayIso = new Date().toISOString().slice(0, 10);
+      document.getElementById('dateStartInput').value = todayIso;
+
+      state.cloudUrl = safeGetStorage(CLOUD_URL_KEY, '');
+      document.getElementById('inputCloudWebhook').value = state.cloudUrl;
+
+      // Determine initial user slug from URL hash (#/maybekaioo) or query (?u=maybekaioo)
+      const hashSlug = window.location.hash.replace(/^#\/?/, '').trim();
+      const params = new URLSearchParams(window.location.search);
+      const querySlug = params.get('u') || params.get('user') || '';
+      const initialSlug = sanitizeSlug(hashSlug || querySlug || 'maybekaioo');
+
+      loadUserNotepad(initialSlug);
+      updateCalculators();
+      updateClinicalDatesTab();
+
+      window.addEventListener('hashchange', () => {
+        const nextSlug = sanitizeSlug(window.location.hash.replace(/^#\/?/, ''));
+        if (nextSlug && nextSlug !== state.currentSlug) {
+          loadUserNotepad(nextSlug);
+        }
+      });
+
+      // Mobile Sidebar Toggle
+      document.getElementById('btnToggleSidebarMobile').addEventListener('click', () => {
+        const sb = document.getElementById('leftSidebar');
+        sb.classList.toggle('hidden');
+        sb.classList.toggle('fixed');
+        sb.classList.toggle('inset-y-14');
+        sb.classList.toggle('left-0');
+        sb.classList.toggle('shadow-2xl');
+      });
+
+      // Main Editor Typing
+      const editor = document.getElementById('mainNotepadEditor');
+      editor.addEventListener('input', () => {
+        const activeTab = getActiveTab();
+        if (!activeTab) return;
+        activeTab.content = editor.value;
+        updateStatsCounters(activeTab.content);
+        renderOutlineSidebar();
+        renderPrintSheet();
+        triggerAutoSave();
+      });
+
+      // Snippets & Tags
+      document.querySelectorAll('.snippet-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const key = btn.getAttribute('data-snippet');
+          const snippets = getClinicalSnippets();
+          if (snippets[key]) {
+            insertAtCursor(snippets[key]);
+            showToast('Modelo clínico inserido!');
+          }
+        });
+      });
+
+      document.querySelectorAll('.tag-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const rawTag = btn.getAttribute('data-tag').replace(/\\n/g, '\n');
+          insertAtCursor(rawTag);
+        });
+      });
+
+      // View Mode Switchers
+      document.getElementById('btnViewEditor').addEventListener('click', () => setViewMode('editor'));
+      document.getElementById('btnViewCards').addEventListener('click', () => setViewMode('cards'));
+      document.getElementById('btnViewLinks').addEventListener('click', () => setViewMode('links'));
+
+      document.getElementById('btnAddPatientCard').addEventListener('click', () => {
+        insertAtCursor(getClinicalSnippets().paciente_upa);
+        setViewMode('editor');
+        showToast('Novo leito adicionado!');
+      });
+
+      // Print Handover Sheet
+      document.getElementById('btnPrintHandover').addEventListener('click', () => {
+        renderPrintSheet();
+        window.print();
+      });
+
+      // Privacy Blur
+      function togglePrivacyBlur() {
+        state.privacyBlur = !state.privacyBlur;
+        document.body.classList.toggle('privacy-blur', state.privacyBlur);
+        showToast(state.privacyBlur ? 'Modo Privacidade ativado (dados borrados)' : 'Modo Privacidade desativado');
+      }
+      document.getElementById('btnPrivacyToggle').addEventListener('click', togglePrivacyBlur);
+
+      // Theme Toggle
+      document.getElementById('btnThemeToggle').addEventListener('click', () => {
+        const isDark = document.documentElement.classList.toggle('dark');
+        safeSetStorage(THEME_KEY, isDark ? 'dark' : 'light');
+      });
+
+      // Search & Keyboard Shortcuts
+      const searchInput = document.getElementById('searchInput');
+      const btnClearSearch = document.getElementById('btnClearSearch');
+      searchInput.addEventListener('input', () => {
+        state.searchQuery = searchInput.value;
+        btnClearSearch.classList.toggle('hidden', !state.searchQuery);
+        renderOutlineSidebar();
+        if (state.viewMode === 'cards') renderCardsView();
+      });
+      btnClearSearch.addEventListener('click', () => {
+        searchInput.value = '';
+        state.searchQuery = '';
+        btnClearSearch.classList.add('hidden');
+        renderOutlineSidebar();
+        if (state.viewMode === 'cards') renderCardsView();
+      });
+
+      window.addEventListener('keydown', e => {
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+          e.preventDefault();
+          searchInput.focus();
+        }
+        if (e.altKey && e.key.toLowerCase() === 'p') {
+          e.preventDefault();
+          togglePrivacyBlur();
+        }
+        if (e.key === 'Escape') {
+          closeAllModals();
+        }
+      });
+
+      // Backdrop click to close modals
+      document.querySelectorAll('.modal-backdrop').forEach(backdrop => {
+        backdrop.addEventListener('click', e => {
+          if (e.target === backdrop) closeAllModals();
+        });
+      });
+      document.getElementById('toolsDrawerBackdrop').addEventListener('click', e => {
+        if (e.target.id === 'toolsDrawerBackdrop') closeAllModals();
+      });
+
+      // Copy All & Copy URL
+      document.getElementById('btnCopyAllTab').addEventListener('click', () => {
+        const activeTab = getActiveTab();
+        if (activeTab) copyTextToClipboard(activeTab.content, `Aba "${activeTab.title}" copiada!`);
+      });
+
+      function copyCurrentUrl() {
+        const shareUrl = `${window.location.origin}${window.location.pathname}#/${state.currentSlug}`;
+        copyTextToClipboard(shareUrl, `URL copiada: #/${state.currentSlug}`);
+      }
+      document.getElementById('btnCopyUrl').addEventListener('click', copyCurrentUrl);
+      document.getElementById('btnFooterCopyLink').addEventListener('click', copyCurrentUrl);
+
+      // User Switch Modal
+      function openUserModal() {
+        document.getElementById('inputNewUserSlug').value = state.currentSlug;
+        renderSavedUsersPills();
+        document.getElementById('userModal').classList.remove('hidden');
+        document.getElementById('inputNewUserSlug').focus();
+        document.getElementById('inputNewUserSlug').select();
+      }
+      document.getElementById('btnOpenUserModal').addEventListener('click', openUserModal);
+      document.getElementById('btnFooterChangeUrl').addEventListener('click', openUserModal);
+      document.getElementById('btnCloseUserModal').addEventListener('click', closeAllModals);
+      document.getElementById('btnCancelUserModal').addEventListener('click', closeAllModals);
+
+      document.getElementById('switchUserForm').addEventListener('submit', e => {
+        e.preventDefault();
+        const nextSlug = sanitizeSlug(document.getElementById('inputNewUserSlug').value);
+        closeAllModals();
+        loadUserNotepad(nextSlug);
+        showToast(`Caderninho /${nextSlug} carregado!`);
+      });
+
+      // Tab Action Modal
+      const tabModal = document.getElementById('tabActionModal');
+      const tabInput = document.getElementById('tabActionInput');
+      const tabConfirmText = document.getElementById('tabActionConfirmText');
+
+      document.getElementById('btnAddTab').addEventListener('click', () => {
+        state.tabModalMode = 'add';
+        document.getElementById('tabActionModalTitle').textContent = 'Criar Nova Aba / Setor';
+        tabInput.value = '';
+        tabInput.classList.remove('hidden');
+        tabConfirmText.classList.add('hidden');
+        tabModal.classList.remove('hidden');
+        tabInput.focus();
+      });
+
+      document.getElementById('btnRenameTab').addEventListener('click', () => {
+        const activeTab = getActiveTab();
+        if (!activeTab) return;
+        state.tabModalMode = 'rename';
+        document.getElementById('tabActionModalTitle').textContent = 'Renomear Aba Atual';
+        tabInput.value = activeTab.title;
+        tabInput.classList.remove('hidden');
+        tabConfirmText.classList.add('hidden');
+        tabModal.classList.remove('hidden');
+        tabInput.focus();
+      });
+
+      document.getElementById('btnDeleteTab').addEventListener('click', () => {
+        if (state.store.tabs.length <= 1) return;
+        state.tabModalMode = 'delete';
+        document.getElementById('tabActionModalTitle').textContent = 'Excluir Aba';
+        tabInput.classList.add('hidden');
+        tabConfirmText.classList.remove('hidden');
+        tabModal.classList.remove('hidden');
+      });
+
+      document.getElementById('btnCancelTabAction').addEventListener('click', closeAllModals);
+      document.getElementById('btnConfirmTabAction').addEventListener('click', () => {
+        const activeTab = getActiveTab();
+        if (state.tabModalMode === 'add') {
+          const title = tabInput.value.trim() || `Setor ${state.store.tabs.length + 1}`;
+          const newId = 'tab_' + Date.now();
+          state.store.tabs.push({ id: newId, title: title, content: `# ${title.toUpperCase()}\n\n` });
+          state.store.activeTabId = newId;
+        } else if (state.tabModalMode === 'rename' && activeTab) {
+          activeTab.title = tabInput.value.trim() || activeTab.title;
+        } else if (state.tabModalMode === 'delete' && activeTab && state.store.tabs.length > 1) {
+          recordLocalSnapshot('Antes de excluir aba');
+          state.store.tabs = state.store.tabs.filter(t => t.id !== activeTab.id);
+          state.store.activeTabId = state.store.tabs[0].id;
+        }
+        closeAllModals();
+        triggerAutoSave('Alteração de abas');
+        renderAll();
+      });
+
+      // Shift Todos
+      document.getElementById('todoForm').addEventListener('submit', e => {
+        e.preventDefault();
+        const input = document.getElementById('todoInput');
+        const txt = input.value.trim();
+        if (!txt) return;
+        state.store.todos.unshift({ id: 'td_' + Date.now(), text: txt, done: false });
+        input.value = '';
+        triggerAutoSave('Nova pendência');
+        renderTodos();
+      });
+
+      document.getElementById('btnClearDoneTasks').addEventListener('click', () => {
+        state.store.todos = (state.store.todos || []).filter(t => !t.done);
+        triggerAutoSave('Limpar pendências');
+        renderTodos();
+      });
+
+      // Links Organizer Form
+      document.getElementById('addLinkForm').addEventListener('submit', e => {
+        e.preventDefault();
+        const title = document.getElementById('linkTitleInput').value.trim();
+        const url = document.getElementById('linkUrlInput').value.trim();
+        const cat = document.getElementById('linkCategoryInput').value.trim() || 'Clínica';
+        if (!title || !url) return;
+        if (!Array.isArray(state.store.links)) state.store.links = [];
+        state.store.links.unshift({ id: 'lk_' + Date.now(), title, url, category: cat });
+        document.getElementById('linkTitleInput').value = '';
+        document.getElementById('linkUrlInput').value = '';
+        document.getElementById('linkCategoryInput').value = '';
+        triggerAutoSave('Adicionar link');
+        renderLinksView();
+        showToast('Link salvo no caderninho!');
+      });
+
+      // Lab Compactor Modal
+      document.getElementById('btnOpenLabModal').addEventListener('click', () => {
+        const todayStr = new Date().toLocaleDateString('pt-BR').slice(0, 5);
+        if (!document.getElementById('labDate').value) document.getElementById('labDate').value = todayStr;
+        updateLabPreview();
+        document.getElementById('labModal').classList.remove('hidden');
+      });
+      document.getElementById('btnCloseLabModal').addEventListener('click', closeAllModals);
+      document.getElementById('btnAutoExtractLabs').addEventListener('click', autoExtractLabsFromRawText);
+      ['labDate', 'labHb', 'labHt', 'labLeuco', 'labPlaq', 'labPcr', 'labCr', 'labUr', 'labNa', 'labK', 'labTrans', 'labExtra', 'labRawPaste'].forEach(id => {
+        document.getElementById(id).addEventListener('input', updateLabPreview);
+      });
+      document.getElementById('btnClearLabInputs').addEventListener('click', () => {
+        ['labHb', 'labHt', 'labLeuco', 'labPlaq', 'labPcr', 'labCr', 'labUr', 'labNa', 'labK', 'labTrans', 'labExtra', 'labRawPaste'].forEach(id => {
+          document.getElementById(id).value = '';
+        });
+        updateLabPreview();
+      });
+      document.getElementById('btnInsertLabLine').addEventListener('click', () => {
+        const line = document.getElementById('labPreviewOutput').textContent;
+        insertAtCursor('\n' + line + '\n');
+        closeAllModals();
+        showToast('Exames inseridos na evolução!');
+      });
+
+      // Find & Replace + Invertexto Text Transformations Modal
+      document.getElementById('btnOpenFindReplaceModal').addEventListener('click', () => {
+        document.getElementById('findReplaceModal').classList.remove('hidden');
+        document.getElementById('findInput').focus();
+      });
+      document.getElementById('btnCloseFindReplaceModal').addEventListener('click', closeAllModals);
+
+      document.getElementById('btnExecuteReplaceAll').addEventListener('click', () => {
+        const findStr = document.getElementById('findInput').value;
+        const replaceStr = document.getElementById('replaceInput').value;
+        const activeTab = getActiveTab();
+        if (!findStr || !activeTab) return;
+        recordLocalSnapshot('Antes de substituir texto');
+        activeTab.content = activeTab.content.split(findStr).join(replaceStr);
+        renderAll();
+        triggerAutoSave('Substituir texto');
+        closeAllModals();
+        showToast('Substituição concluída!');
+      });
+
+      function transformActiveTabText(fn, label) {
+        const activeTab = getActiveTab();
+        if (!activeTab) return;
+        recordLocalSnapshot(label);
+        activeTab.content = fn(activeTab.content);
+        renderAll();
+        triggerAutoSave(label);
+        closeAllModals();
+        showToast(label + ' aplicado!');
+      }
+
+      document.getElementById('btnTextUpper').addEventListener('click', () => transformActiveTabText(t => t.toUpperCase(), 'MAIÚSCULAS'));
+      document.getElementById('btnTextLower').addEventListener('click', () => transformActiveTabText(t => t.toLowerCase(), 'minúsculas'));
+      document.getElementById('btnTextDedup').addEventListener('click', () => {
+        transformActiveTabText(t => [...new Set(t.split('\n'))].join('\n'), 'Linhas duplicadas removidas');
+      });
+      document.getElementById('btnTextSort').addEventListener('click', () => {
+        transformActiveTabText(t => t.split('\n').sort((a, b) => a.localeCompare(b, 'pt-BR')).join('\n'), 'Ordem alfabética');
+      });
+
+      // History Modal
+      document.getElementById('btnOpenHistoryModal').addEventListener('click', () => {
+        renderHistoryModal();
+        document.getElementById('historyModal').classList.remove('hidden');
+      });
+      document.getElementById('btnCloseHistoryModal').addEventListener('click', closeAllModals);
+
+      // QR Code Modal
+      document.getElementById('btnOpenQrModal').addEventListener('click', () => {
+        const shareUrl = `${window.location.origin}${window.location.pathname}#/${state.currentSlug}`;
+        document.getElementById('qrSlugLabel').textContent = '/' + state.currentSlug;
+        document.getElementById('qrUrlText').textContent = shareUrl;
+        document.getElementById('qrCodeImg').src = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(shareUrl)}`;
+        document.getElementById('qrModal').classList.remove('hidden');
+      });
+      document.getElementById('btnCloseQrModal').addEventListener('click', closeAllModals);
+
+      // Cloud Sync Modal
+      document.getElementById('btnOpenCloudModal').addEventListener('click', () => {
+        document.getElementById('inputCloudWebhook').value = state.cloudUrl;
+        document.getElementById('cloudModal').classList.remove('hidden');
+      });
+      document.getElementById('btnCloseCloudModal').addEventListener('click', closeAllModals);
+      document.getElementById('btnSaveCloudConfig').addEventListener('click', () => {
+        state.cloudUrl = document.getElementById('inputCloudWebhook').value.trim();
+        safeSetStorage(CLOUD_URL_KEY, state.cloudUrl);
+        closeAllModals();
+        if (state.cloudUrl) {
+          pushNotepadToCloud(state.currentSlug, state.store);
+          showToast('Sincronização com Google Sheets ativada!');
+        } else {
+          showToast('Modo local ativado.');
+        }
+      });
+      document.getElementById('btnPullFromCloudNow').addEventListener('click', () => {
+        state.cloudUrl = document.getElementById('inputCloudWebhook').value.trim();
+        safeSetStorage(CLOUD_URL_KEY, state.cloudUrl);
+        if (state.cloudUrl) {
+          pullNotepadFromCloud(state.currentSlug);
+          closeAllModals();
+        }
+      });
+
+      // Tools & Calculators Drawer
+      document.getElementById('btnOpenToolsDrawer').addEventListener('click', () => {
+        document.getElementById('toolsDrawerBackdrop').classList.remove('hidden');
+      });
+      document.getElementById('btnCloseToolsDrawer').addEventListener('click', closeAllModals);
+
+      // Drawer Sub-tabs navigation
+      document.querySelectorAll('.drawer-tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const target = btn.getAttribute('data-drawer-tab');
+          document.querySelectorAll('.drawer-tab-btn').forEach(b => {
+            const active = b === btn;
+            b.className = active
+              ? 'drawer-tab-btn pb-2 px-2.5 font-bold border-b-2 border-teal-600 text-teal-700 dark:text-teal-400 shrink-0'
+              : 'drawer-tab-btn pb-2 px-2.5 font-medium border-b-2 border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 shrink-0';
+          });
+          document.getElementById('drawerTabCalc').classList.toggle('hidden', target !== 'calc');
+          document.getElementById('drawerTabDates').classList.toggle('hidden', target !== 'dates');
+          document.getElementById('drawerTabDiff').classList.toggle('hidden', target !== 'diff');
+          document.getElementById('drawerTabOcr').classList.toggle('hidden', target !== 'ocr');
+        });
+      });
+
+      ['cgAge', 'cgWeight', 'cgCr', 'cgSex', 'naMeasured', 'naGlucose', 'naUrea', 'vasoPreset', 'vasoWeight', 'vasoRate', 'bmiWeight', 'bmiHeight', 'bmiSex'].forEach(id => {
+        document.getElementById(id).addEventListener('input', updateCalculators);
+        document.getElementById(id).addEventListener('change', updateCalculators);
+      });
+      document.querySelectorAll('.curb-check').forEach(chk => chk.addEventListener('change', updateCalculators));
+
+      ['dateStartInput', 'dateTargetDays', 'obDumInput', 'birthDateInput'].forEach(id => {
+        document.getElementById(id).addEventListener('input', updateClinicalDatesTab);
+        document.getElementById(id).addEventListener('change', updateClinicalDatesTab);
+      });
+
+      document.getElementById('btnInsertCrCl').addEventListener('click', () => {
+        insertAtCursor(`[${document.getElementById('cgResultText').textContent}] `);
+        closeAllModals();
+      });
+      document.getElementById('btnInsertNaCorr').addEventListener('click', () => {
+        insertAtCursor(`[${document.getElementById('naResultText').textContent}] `);
+        closeAllModals();
+      });
+      document.getElementById('btnInsertVaso').addEventListener('click', () => {
+        insertAtCursor(`[DVA: ${document.getElementById('vasoResultText').textContent}] `);
+        closeAllModals();
+      });
+      document.getElementById('btnInsertBmi').addEventListener('click', () => {
+        insertAtCursor(`[${document.getElementById('bmiResultText').textContent}] `);
+        closeAllModals();
+      });
+      document.getElementById('btnInsertCurb').addEventListener('click', () => {
+        insertAtCursor(`[${document.getElementById('curbResultText').textContent}] `);
+        closeAllModals();
+      });
+      document.getElementById('btnInsertDayCount').addEventListener('click', () => {
+        insertAtCursor(`[${document.getElementById('dateCountResult').textContent}] `);
+        closeAllModals();
+      });
+      document.getElementById('btnInsertObCalc').addEventListener('click', () => {
+        insertAtCursor(`[${document.getElementById('obResultText').textContent}] `);
+        closeAllModals();
+      });
+      document.getElementById('btnInsertAgeCalc').addEventListener('click', () => {
+        insertAtCursor(`[${document.getElementById('ageResultText').textContent}] `);
+        closeAllModals();
+      });
+
+      // Diff Tool
+      document.getElementById('btnRunDiff').addEventListener('click', runEvolutionDiff);
+
+      // OCR Image to Text (Lazy-loads Tesseract.js only when user selects an image)
+      document.getElementById('ocrFileInput').addEventListener('change', async e => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        const statusEl = document.getElementById('ocrStatusText');
+        const outEl = document.getElementById('ocrResultTextarea');
+        statusEl.textContent = 'Carregando motor OCR e lendo imagem...';
+        try {
+          if (!window.Tesseract) {
+            await new Promise((resolve, reject) => {
+              const s = document.createElement('script');
+              s.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';
+              s.onload = resolve;
+              s.onerror = reject;
+              document.head.appendChild(s);
+            });
+          }
+          const result = await window.Tesseract.recognize(file, 'por');
+          outEl.value = (result && result.data && result.data.text) ? result.data.text.trim() : '';
+          statusEl.textContent = 'Leitura concluída! Revise o texto abaixo antes de inserir.';
+        } catch (err) {
+          statusEl.textContent = 'Não foi possível carregar o OCR offline. Verifique sua conexão.';
+        }
+      });
+
+      document.getElementById('btnInsertOcrText').addEventListener('click', () => {
+        const txt = document.getElementById('ocrResultTextarea').value.trim();
+        if (txt) {
+          insertAtCursor('\n' + txt + '\n');
+          closeAllModals();
+          showToast('Texto do OCR inserido!');
+        }
+      });
+
+      // Safe Export TXT & JSON with URL.revokeObjectURL and filename sanitization (Fixes Bug #7)
+      function sanitizeFilename(name) {
+        return String(name || 'arquivo')
+          .toLowerCase()
+          .replace(/[^a-z0-9_-]+/g, '-')
+          .replace(/^-+|-+$/g, '') || 'nota';
+      }
+
+      document.getElementById('btnExportTxt').addEventListener('click', () => {
+        const activeTab = getActiveTab();
+        if (!activeTab) return;
+        const blob = new Blob([activeTab.content], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${state.currentSlug}-${sanitizeFilename(activeTab.title)}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      });
+
+      document.getElementById('btnExportJson').addEventListener('click', () => {
+        const blob = new Blob([JSON.stringify(state.store, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `caderninho-backup-${state.currentSlug}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      });
+
+      // Import JSON Backup
+      document.getElementById('inputImportJson').addEventListener('change', e => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          try {
+            const parsed = JSON.parse(String(reader.result || '{}'));
+            if (parsed && Array.isArray(parsed.tabs) && parsed.tabs.length > 0) {
+              recordLocalSnapshot('Antes de importar JSON');
+              state.store = parsed;
+              triggerAutoSave('Importar backup JSON');
+              renderAll();
+              showToast('Backup JSON importado com sucesso!');
+            } else {
+              showToast('Arquivo JSON inválido.');
+            }
+          } catch (err) {
+            showToast('Erro ao ler arquivo JSON.');
+          }
+        };
+        reader.readAsText(file);
+      });
+    });
+  </script>
+</body>
+</html>
