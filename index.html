@@ -50,23 +50,22 @@
         margin-bottom: 10px !important;
         border-radius: 6px !important;
         font-family: 'IBM Plex Mono', monospace;
-        font-size: 10pt;
-        line-height: 1.45;
+        font-size: 9.5pt;
+        line-height: 1.4;
       }
     }
   </style>
 </head>
 <body class="bg-[#F8FAFC] text-slate-900 dark:bg-[#0B111E] dark:text-slate-100 min-h-screen flex flex-col selection:bg-teal-600/20 selection:text-teal-700 dark:selection:text-teal-300 transition-colors duration-150">
 
-  <!-- GLOBAL ADMIN NOTICE BANNER (Only visible when Admin sets a message) -->
+  <!-- GLOBAL ADMIN NOTICE BANNER -->
   <div id="globalNoticeBanner" class="no-print hidden bg-teal-700 text-white text-xs text-center py-1.5 px-4 font-medium"></div>
 
   <!-- ===================================================================== -->
-  <!-- SCREEN 1: PORTAL INICIAL (CRIAÇÃO / ACESSO POR URL PERSONALIZADA)     -->
+  <!-- SCREEN 1: PORTAL INICIAL (URL PERSONALIZADA)                          -->
   <!-- ===================================================================== -->
   <section id="landingScreen" class="no-print flex-1 flex flex-col items-center justify-center p-6">
     <div class="w-full max-w-md space-y-7">
-      <!-- Brand -->
       <div class="text-center space-y-2.5">
         <div class="w-12 h-12 mx-auto rounded-2xl bg-teal-700 text-white flex items-center justify-center text-xl font-bold shadow-sm">
           ✚
@@ -75,11 +74,10 @@
           Meu Caderninho de Pacientes
         </h1>
         <p class="text-sm text-slate-500 dark:text-slate-400">
-          Escolha uma URL personalizada para criar ou abrir sua biblioteca clínica. Sem cadastro, sem senha, acessível de qualquer dispositivo.
+          Crie ou acesse sua biblioteca clínica pela URL. Minimalista, offline-first e sincronizado na nuvem.
         </p>
       </div>
 
-      <!-- URL Creator Card -->
       <form id="landingForm" class="bg-white dark:bg-[#0F172A] border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm space-y-4">
         <div>
           <label for="landingSlugInput" class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5">
@@ -97,7 +95,7 @@
             />
           </div>
           <p class="text-[11px] text-slate-400 mt-1.5">
-            Use apenas letras, números, hífen ou underline (ex.: <span class="mono">dr-silva</span>, <span class="mono">plantao-uti</span>).
+            Apenas letras, números, hífen ou underline (ex.: <span class="mono">dr-silva</span>, <span class="mono">plantao-upa</span>).
           </p>
         </div>
 
@@ -105,19 +103,42 @@
           Criar ou Abrir Caderninho →
         </button>
 
-        <!-- Recent notebooks opened on this browser -->
         <div id="landingRecentWrapper" class="hidden pt-3 border-t border-slate-100 dark:border-slate-800">
           <div class="text-[11px] font-medium text-slate-400 mb-2">Acessados recentemente neste dispositivo:</div>
           <div id="landingRecentPills" class="flex flex-wrap gap-1.5"></div>
         </div>
       </form>
 
-      <!-- Minimalist Footer Links -->
       <div class="flex items-center justify-center gap-4 text-xs text-slate-400">
         <button id="btnLandingTheme" type="button" class="hover:text-slate-700 dark:hover:text-slate-200 transition">Alternar Tema</button>
         <span>•</span>
         <button id="btnLandingConfig" type="button" class="hover:text-slate-700 dark:hover:text-slate-200 transition">Nuvem &amp; Admin</button>
       </div>
+    </div>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- SCREEN 1B: PIN UNLOCK OVERLAY (ONLY IF NOTEBOOK HAS OPTIONAL PIN)     -->
+  <!-- ===================================================================== -->
+  <section id="pinLockScreen" class="no-print hidden flex-1 flex flex-col items-center justify-center p-6">
+    <div class="w-full max-w-xs bg-white dark:bg-[#0F172A] border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm text-center space-y-4">
+      <div class="w-10 h-10 mx-auto rounded-xl bg-teal-50 dark:bg-teal-950 text-teal-700 dark:text-teal-400 flex items-center justify-center text-lg">
+        🔒
+      </div>
+      <div>
+        <h2 class="text-base font-bold">Caderno Protegido</h2>
+        <p id="pinLockSlugLabel" class="text-xs mono text-slate-500 mt-0.5">/usuario</p>
+      </div>
+      <form id="pinUnlockForm" class="space-y-3">
+        <input id="pinUnlockInput" type="password" inputmode="numeric" maxlength="20" required placeholder="Digite o PIN" class="w-full text-center tracking-widest mono text-sm px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 focus:outline-none focus:border-teal-600" />
+        <div id="pinUnlockError" class="hidden text-xs text-rose-600 font-medium">PIN incorreto.</div>
+        <button type="submit" class="w-full py-2 rounded-xl text-xs font-semibold bg-teal-700 text-white hover:bg-teal-800 transition">
+          Desbloquear
+        </button>
+      </form>
+      <button id="btnPinBackToLanding" type="button" class="text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+        ← Voltar para a tela inicial
+      </button>
     </div>
   </section>
 
@@ -128,45 +149,44 @@
 
     <!-- SINGLE-LINE MINIMALIST HEADER -->
     <header class="sticky top-0 z-30 h-14 bg-white/95 dark:bg-[#0F172A]/95 backdrop-blur-md border-b border-slate-200/90 dark:border-slate-800 px-3 sm:px-5 flex items-center justify-between gap-2">
-      <!-- Left: Back to Portal + Active URL -->
       <div class="flex items-center gap-2 min-w-0">
-        <button id="btnBackToLanding" type="button" class="p-2 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition" title="Voltar à tela inicial / Trocar URL">
+        <button id="btnBackToLanding" type="button" class="p-2 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition" title="Voltar à tela inicial">
           ←
         </button>
         <div class="w-7 h-7 rounded-lg bg-teal-700 text-white flex items-center justify-center text-xs font-bold shrink-0">✚</div>
-        <button id="btnCopyDirectLink" type="button" class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 hover:border-teal-600 transition text-xs min-w-0" title="Clique para copiar o link direto deste caderno">
-          <span class="mono font-semibold text-teal-700 dark:text-teal-400 truncate max-w-[110px] sm:max-w-[180px]" id="headerSlugText">/usuario</span>
+        <button id="btnCopyDirectLink" type="button" class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 hover:border-teal-600 transition text-xs min-w-0" title="Copiar link direto deste caderno">
+          <span class="mono font-semibold text-teal-700 dark:text-teal-400 truncate max-w-[100px] sm:max-w-[170px]" id="headerSlugText">/usuario</span>
           <span class="text-slate-400 text-[10px]">🔗</span>
         </button>
       </div>
 
-      <!-- Center: 3 Clean Library Tabs -->
+      <!-- 3 Clean Library Tabs -->
       <nav class="flex items-center bg-slate-100 dark:bg-slate-900 p-0.5 rounded-lg border border-slate-200/80 dark:border-slate-800 text-xs">
-        <button id="tabActivePatients" type="button" class="px-3 py-1 rounded-md font-semibold bg-white dark:bg-slate-800 text-teal-700 dark:text-teal-400 shadow-2xs transition">
+        <button id="tabActivePatients" type="button" class="px-2.5 sm:px-3 py-1 rounded-md font-semibold bg-white dark:bg-slate-800 text-teal-700 dark:text-teal-400 shadow-2xs transition">
           Ativos <span id="countActive" class="mono text-[10px] opacity-75 ml-0.5">0</span>
         </button>
-        <button id="tabArchivedPatients" type="button" class="px-3 py-1 rounded-md font-medium text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition">
+        <button id="tabArchivedPatients" type="button" class="px-2.5 sm:px-3 py-1 rounded-md font-medium text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition">
           Altas <span id="countArchived" class="mono text-[10px] opacity-75 ml-0.5">0</span>
         </button>
-        <button id="tabProtocols" type="button" class="px-3 py-1 rounded-md font-medium text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition">
+        <button id="tabProtocols" type="button" class="px-2.5 sm:px-3 py-1 rounded-md font-medium text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition">
           Condutas <span id="countProtocols" class="mono text-[10px] opacity-75 ml-0.5">0</span>
         </button>
       </nav>
 
-      <!-- Right: Status + Minimal Utility Icons -->
+      <!-- Sync Status + 4 Clean Icons -->
       <div class="flex items-center gap-1.5">
         <div id="syncBadge" class="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800">
           <span id="syncDot" class="w-1.5 h-1.5 rounded-full bg-teal-600"></span>
           <span id="syncLabel">Salvo</span>
         </div>
 
-        <button id="btnOpenTools" type="button" class="p-2 rounded-lg text-xs border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition" title="Calculadoras, Compactador de Labs & Imprimir A4">
+        <button id="btnOpenTools" type="button" class="p-2 rounded-lg text-xs border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition" title="Calculadoras (Adulto/Pediatria), Smart Paste & Imprimir">
           🧰
         </button>
         <button id="btnPrivacy" type="button" class="p-2 rounded-lg text-xs border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition" title="Modo Discreto (Alt+P)">
           👁️
         </button>
-        <button id="btnOpenSettings" type="button" class="p-2 rounded-lg text-xs border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition" title="Sincronização na Nuvem & Painel Admin">
+        <button id="btnOpenSettings" type="button" class="p-2 rounded-lg text-xs border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition" title="Nuvem, PIN & Painel Admin">
           ⚙️
         </button>
         <button id="btnTheme" type="button" class="p-2 rounded-lg text-xs border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition" title="Tema Claro / Plantão Noturno">
@@ -178,20 +198,21 @@
     <!-- TWO-COLUMN MINIMALIST LIBRARY WORKSPACE -->
     <div class="flex-1 max-w-6xl w-full mx-auto grid grid-cols-1 md:grid-cols-12 min-h-0">
 
-      <!-- LEFT COLUMN: PATIENT / PROTOCOL LIBRARY LIST -->
-      <aside id="libraryListColumn" class="md:col-span-4 lg:col-span-4 border-r border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#0F172A] p-3.5 flex flex-col gap-3">
-        <!-- Search + New Item Button -->
-        <div class="flex items-center gap-2">
+      <!-- LEFT COLUMN: LIBRARY LIST -->
+      <aside class="md:col-span-4 border-r border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#0F172A] p-3.5 flex flex-col gap-2.5">
+        <div class="flex items-center gap-1.5">
           <div class="relative flex-1">
             <input id="librarySearch" type="text" placeholder="Buscar (Ctrl+K)..." class="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 focus:outline-none focus:border-teal-600" />
             <span class="absolute left-2.5 top-2 text-slate-400 text-xs">🔍</span>
           </div>
+          <button id="btnCopyBatchWhatsApp" type="button" class="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-emerald-600 hover:text-white transition shrink-0" title="Copiar todos os pacientes filtrados para WhatsApp">
+            💬 Zap
+          </button>
           <button id="btnNewItem" type="button" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-teal-700 text-white hover:bg-teal-800 transition shrink-0">
             + Novo
           </button>
         </div>
 
-        <!-- Sector Filter Pills (Only for Active/Archived Patients) -->
         <div id="sectorFilterBar" class="flex items-center gap-1 overflow-x-auto text-[11px]">
           <button type="button" data-sector="all" class="sector-pill px-2.5 py-1 rounded-md font-semibold bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 shrink-0">Todos</button>
           <button type="button" data-sector="vermelha" class="sector-pill px-2.5 py-1 rounded-md font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 shrink-0">Vermelha</button>
@@ -199,32 +220,31 @@
           <button type="button" data-sector="enfermaria" class="sector-pill px-2.5 py-1 rounded-md font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 shrink-0">Enfermaria</button>
         </div>
 
-        <!-- Library Items Container -->
-        <div id="libraryItemsList" class="flex-1 overflow-y-auto space-y-1.5 pr-0.5 min-h-[260px]"></div>
+        <div id="libraryItemsList" class="flex-1 overflow-y-auto space-y-1.5 pr-0.5 min-h-[240px]"></div>
       </aside>
 
-      <!-- RIGHT COLUMN: CLEAN FOCUSED EDITOR (PATIENT SHEET OR PROTOCOL) -->
-      <main id="editorColumn" class="md:col-span-8 lg:col-span-8 flex flex-col bg-[#F8FAFC] dark:bg-[#0B111E] p-3.5 sm:p-5 min-h-[75vh]">
-        
+      <!-- RIGHT COLUMN: FOCUSED CLINICAL EDITOR -->
+      <main class="md:col-span-8 flex flex-col bg-[#F8FAFC] dark:bg-[#0B111E] p-3.5 sm:p-5 min-h-[75vh]">
+
         <!-- Empty State -->
         <div id="emptySelectionState" class="hidden flex-1 flex flex-col items-center justify-center text-center p-8 text-slate-400">
           <div class="text-3xl mb-2">📋</div>
           <p class="text-sm font-medium text-slate-600 dark:text-slate-300">Nenhum registro selecionado</p>
-          <p class="text-xs mt-1">Selecione um item na lista ou clique em <strong>+ Novo</strong> para começar.</p>
+          <p class="text-xs mt-1">Selecione na lista ou clique em <strong>+ Novo</strong>.</p>
         </div>
 
-        <!-- Patient Hybrid Sheet -->
+        <!-- PATIENT HYBRID SHEET -->
         <div id="patientEditorCard" class="hidden flex-1 flex flex-col bg-white dark:bg-[#0F172A] border border-slate-200/90 dark:border-slate-800 rounded-2xl shadow-2xs overflow-hidden">
+          
           <!-- Compact Structured Header -->
-          <div class="p-4 border-b border-slate-100 dark:border-slate-800 space-y-3 bg-slate-50/50 dark:bg-slate-900/30">
+          <div class="p-3.5 sm:p-4 border-b border-slate-100 dark:border-slate-800 space-y-2.5 bg-slate-50/50 dark:bg-slate-900/30">
             <div class="flex flex-wrap items-center justify-between gap-2">
               <div class="flex items-center gap-2 flex-1 min-w-[200px]">
-                <input id="pBed" type="text" placeholder="Leito (ex: L01)" class="w-24 px-2.5 py-1 text-xs mono font-bold rounded-lg bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 focus:outline-none focus:border-teal-600" />
+                <input id="pBed" type="text" placeholder="Leito" class="w-20 px-2.5 py-1 text-xs mono font-bold rounded-lg bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 focus:outline-none focus:border-teal-600" />
                 <input id="pName" type="text" placeholder="Iniciais / Paciente" class="blur-sensitive flex-1 px-2.5 py-1 text-sm font-bold rounded-lg bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 focus:outline-none focus:border-teal-600" />
                 <input id="pAge" type="text" placeholder="Idade" class="w-16 px-2 py-1 text-xs mono rounded-lg bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 focus:outline-none focus:border-teal-600" />
               </div>
 
-              <!-- Action Buttons (Copy, Archive/Restore, Delete) -->
               <div class="flex items-center gap-1.5">
                 <button id="btnCopyPatient" type="button" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-teal-700 text-white hover:bg-teal-800 transition">
                   Copiar p/ PEP
@@ -232,13 +252,12 @@
                 <button id="btnToggleArchive" type="button" class="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition">
                   Alta
                 </button>
-                <button id="btnDeletePatient" type="button" class="px-2 py-1.5 rounded-lg text-xs text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition" title="Excluir registro">
+                <button id="btnDeletePatient" type="button" class="px-2 py-1.5 rounded-lg text-xs text-slate-400 hover:text-rose-600 transition" title="Excluir ficha">
                   🗑️
                 </button>
               </div>
             </div>
 
-            <!-- Second Structured Row: Sector, DI, HD, Allergy -->
             <div class="grid grid-cols-2 sm:grid-cols-12 gap-2 text-xs">
               <div class="sm:col-span-3">
                 <select id="pSector" class="w-full px-2.5 py-1 rounded-lg bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 font-medium focus:outline-none focus:border-teal-600">
@@ -258,31 +277,105 @@
                 <input id="pAllergy" type="text" placeholder="Alergias" class="w-full px-2.5 py-1 rounded-lg bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 focus:outline-none focus:border-rose-500 text-rose-700 dark:text-rose-400 placeholder:text-slate-400" />
               </div>
             </div>
+
+            <!-- 2 COLLAPSIBLE STRUCTURED CLINICAL BUILDERS (SSVV+EF & EXAMES COMPLEMENTARES) -->
+            <div class="flex flex-wrap items-center gap-2 pt-1">
+              <button id="btnToggleExamPanel" type="button" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-teal-600 transition flex items-center gap-1.5">
+                <span>🩺 SSVV &amp; Exame Físico</span>
+                <span id="examPanelIndicator" class="text-[10px] text-slate-400">▸</span>
+              </button>
+              <button id="btnToggleLabsPanel" type="button" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-teal-600 transition flex items-center gap-1.5">
+                <span>🧪 Exames Complementares</span>
+                <span id="labsPanelIndicator" class="text-[10px] text-slate-400">▸</span>
+              </button>
+              <span class="text-[10px] text-slate-400 hidden sm:inline">Preenchendo acima, já sai formatado na história e no Copiar p/ PEP.</span>
+            </div>
           </div>
 
-          <!-- Clean Free-Text Evolution Area (Invertexto Core + Slash Commands) -->
+          <!-- COLLAPSIBLE PANEL 1: SSVV & EXAME FÍSICO (NORMAL / ALTERADO) -->
+          <div id="examBuilderPanel" class="hidden p-4 border-b border-slate-200/80 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/50 space-y-3 text-xs">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-teal-700 dark:text-teal-400">Sinais Vitais (SSVV)</span>
+              <button id="btnInsertExamIntoNotes" type="button" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-teal-700 text-white hover:bg-teal-800 transition">
+                Inserir na História ↓
+              </button>
+            </div>
+            <div class="grid grid-cols-3 sm:grid-cols-6 gap-1.5">
+              <div><label class="text-[10px] text-slate-500">PA (mmHg)</label><input id="efPa" type="text" placeholder="120x80" class="w-full px-2 py-1 rounded bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 mono" /></div>
+              <div><label class="text-[10px] text-slate-500">FC (bpm)</label><input id="efFc" type="text" placeholder="78" class="w-full px-2 py-1 rounded bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 mono" /></div>
+              <div><label class="text-[10px] text-slate-500">FR (irpm)</label><input id="efFr" type="text" placeholder="16" class="w-full px-2 py-1 rounded bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 mono" /></div>
+              <div><label class="text-[10px] text-slate-500">SpO2 (%)</label><input id="efSpo2" type="text" placeholder="98% AA" class="w-full px-2 py-1 rounded bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 mono" /></div>
+              <div><label class="text-[10px] text-slate-500">Tax (°C)</label><input id="efTax" type="text" placeholder="36.5" class="w-full px-2 py-1 rounded bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 mono" /></div>
+              <div><label class="text-[10px] text-slate-500">HGT (mg/dL)</label><input id="efHgt" type="text" placeholder="98" class="w-full px-2 py-1 rounded bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 mono" /></div>
+            </div>
+
+            <div class="space-y-1.5 pt-1">
+              <div class="flex items-center justify-between">
+                <span class="font-bold text-teal-700 dark:text-teal-400">Exame Físico por Sistemas</span>
+                <button id="btnAllNormalExam" type="button" class="text-[11px] text-teal-700 dark:text-teal-400 hover:underline">Marcar todos Normal</button>
+              </div>
+              <div id="examSystemsGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-2"></div>
+            </div>
+          </div>
+
+          <!-- COLLAPSIBLE PANEL 2: EXAMES COMPLEMENTARES (FORMATO KAIO) -->
+          <div id="labsBuilderPanel" class="hidden p-4 border-b border-slate-200/80 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/50 space-y-3 text-xs">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-teal-700 dark:text-teal-400">Exames Complementares &amp; Hemograma</span>
+              <button id="btnInsertLabsIntoNotes" type="button" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-teal-700 text-white hover:bg-teal-800 transition">
+                Inserir na História ↓
+              </button>
+            </div>
+
+            <div class="grid grid-cols-3 sm:grid-cols-6 gap-1.5">
+              <div class="col-span-2 sm:col-span-2">
+                <label class="text-[10px] text-slate-500">Data do Exame</label>
+                <input id="labDate" type="date" class="w-full px-2 py-1 rounded bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 mono text-[11px]" />
+              </div>
+              <div><label class="text-[10px] text-slate-500">Hb</label><input id="labHb" type="text" placeholder="12.4" class="w-full px-2 py-1 rounded bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 mono" /></div>
+              <div><label class="text-[10px] text-slate-500">Ht (%)</label><input id="labHt" type="text" placeholder="37%" class="w-full px-2 py-1 rounded bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 mono" /></div>
+              <div><label class="text-[10px] text-slate-500">Leuco</label><input id="labLeuco" type="text" placeholder="14.200" class="w-full px-2 py-1 rounded bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 mono" /></div>
+              <div><label class="text-[10px] text-slate-500">Bastões (%)</label><input id="labBands" type="number" step="0.5" min="0" max="100" placeholder="ex: 8" class="w-full px-2 py-1 rounded bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 mono" /></div>
+              <div><label class="text-[10px] text-slate-500">Plaquetas</label><input id="labPlaq" type="text" placeholder="240.000" class="w-full px-2 py-1 rounded bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 mono" /></div>
+              <div><label class="text-[10px] text-slate-500">Ur</label><input id="labUr" type="text" placeholder="42" class="w-full px-2 py-1 rounded bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 mono" /></div>
+              <div><label class="text-[10px] text-slate-500">Cr</label><input id="labCr" type="text" placeholder="1.1" class="w-full px-2 py-1 rounded bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 mono" /></div>
+              <div><label class="text-[10px] text-slate-500">Na</label><input id="labNa" type="text" placeholder="138" class="w-full px-2 py-1 rounded bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 mono" /></div>
+              <div><label class="text-[10px] text-slate-500">K</label><input id="labK" type="text" placeholder="4.2" class="w-full px-2 py-1 rounded bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 mono" /></div>
+              <div><label class="text-[10px] text-slate-500">PCR</label><input id="labPcr" type="text" placeholder="65" class="w-full px-2 py-1 rounded bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 mono" /></div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+              <div><label class="text-[10px] text-slate-500">Outros Labs (TGO/TGP, Gaso, Troponina...)</label><input id="labOthers" type="text" placeholder="TGO 28 / TGP 32 / Tropo neg" class="w-full px-2 py-1 rounded bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 mono" /></div>
+              <div><label class="text-[10px] text-slate-500">Imagem / ECG</label><input id="labImaging" type="text" placeholder="RX Tórax sem consolidações / ECG sinusal" class="w-full px-2 py-1 rounded bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 mono" /></div>
+            </div>
+
+            <div class="p-2.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
+              <div class="text-[10px] uppercase text-slate-400 mb-1">Prévia Automática:</div>
+              <div id="labsLivePreview" class="mono text-[11px] text-teal-700 dark:text-teal-300 whitespace-pre-wrap"></div>
+            </div>
+          </div>
+
+          <!-- FREE-TEXT CLINICAL EVOLUTION AREA -->
           <textarea
             id="pNotes"
             spellcheck="false"
-            placeholder="Evolução, exames, condutas...&#10;&#10;Comandos rápidos: digite /upa, /soap, /exame, /sv ou /ssvv + Espaço para inserir modelos."
-            class="blur-sensitive mono flex-1 w-full p-5 bg-transparent text-[13.5px] leading-relaxed text-slate-800 dark:text-slate-100 focus:outline-none resize-none min-h-[420px]"
+            placeholder="História clínica, evolução e condutas...&#10;&#10;Dicas:&#10;• Digite [ ] Tarefa para contar pendências automaticamente na lista&#10;• Digite /upa, /soap, /exame, /sv ou /ssvv + Espaço"
+            class="blur-sensitive mono flex-1 w-full p-5 bg-transparent text-[13.5px] leading-relaxed text-slate-800 dark:text-slate-100 focus:outline-none resize-none min-h-[380px]"
           ></textarea>
 
-          <!-- Subtle Slash Command Hint Bar -->
+          <!-- Minimal Footer Hint Bar -->
           <div class="px-4 py-2 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-[11px] text-slate-400 bg-slate-50/40 dark:bg-slate-900/20">
-            <div class="flex items-center gap-2 overflow-x-auto">
-              <span>Comandos:</span>
+            <div class="flex items-center gap-1.5 overflow-x-auto">
               <button type="button" data-cmd="/upa" class="cmd-chip mono px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 hover:text-teal-600">/upa</button>
               <button type="button" data-cmd="/soap" class="cmd-chip mono px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 hover:text-teal-600">/soap</button>
-              <button type="button" data-cmd="/exame" class="cmd-chip mono px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 hover:text-teal-600">/exame</button>
               <button type="button" data-cmd="/sv" class="cmd-chip mono px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 hover:text-teal-600">/sv</button>
-              <button type="button" data-cmd="/ssvv" class="cmd-chip mono px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 hover:text-teal-600">/ssvv</button>
+              <button type="button" data-cmd="/pend" class="cmd-chip mono px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 hover:text-teal-600">[ ] pendência</button>
             </div>
             <span id="pCharCount" class="mono shrink-0 ml-2">0 chars</span>
           </div>
         </div>
 
-        <!-- Protocol / Conduta Clean Editor -->
+        <!-- PROTOCOL / CONDUTA EDITOR -->
         <div id="protocolEditorCard" class="hidden flex-1 flex flex-col bg-white dark:bg-[#0F172A] border border-slate-200/90 dark:border-slate-800 rounded-2xl shadow-2xs overflow-hidden">
           <div class="p-4 border-b border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2 bg-slate-50/50 dark:bg-slate-900/30">
             <div class="flex items-center gap-2 flex-1 min-w-[200px]">
@@ -290,28 +383,18 @@
               <input id="protoTag" type="text" placeholder="Categoria" class="w-28 px-2.5 py-1 text-xs rounded-lg bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 focus:outline-none focus:border-teal-600" />
             </div>
             <div class="flex items-center gap-1.5">
-              <button id="btnCopyProtocol" type="button" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-teal-700 text-white hover:bg-teal-800 transition">
-                Copiar
-              </button>
-              <button id="btnDeleteProtocol" type="button" class="px-2 py-1.5 rounded-lg text-xs text-slate-400 hover:text-rose-600 transition" title="Excluir conduta">
-                🗑️
-              </button>
+              <button id="btnCopyProtocol" type="button" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-teal-700 text-white hover:bg-teal-800 transition">Copiar</button>
+              <button id="btnDeleteProtocol" type="button" class="px-2 py-1.5 rounded-lg text-xs text-slate-400 hover:text-rose-600 transition" title="Excluir conduta">🗑️</button>
             </div>
           </div>
-          <textarea
-            id="protoContent"
-            spellcheck="false"
-            placeholder="Escreva aqui seus esquemas, doses, diluições ou protocolos de plantão..."
-            class="mono flex-1 w-full p-5 bg-transparent text-[13.5px] leading-relaxed text-slate-800 dark:text-slate-100 focus:outline-none resize-none min-h-[450px]"
-          ></textarea>
+          <textarea id="protoContent" spellcheck="false" placeholder="Esquemas, doses, diluições ou protocolos de plantão..." class="mono flex-1 w-full p-5 bg-transparent text-[13.5px] leading-relaxed text-slate-800 dark:text-slate-100 focus:outline-none resize-none min-h-[450px]"></textarea>
         </div>
-
       </main>
     </div>
   </div>
 
   <!-- ===================================================================== -->
-  <!-- PRINT-ONLY A4 VIEW (ACTIVE PATIENTS HANDOVER)                         -->
+  <!-- PRINT-ONLY A4 VIEW                                                    -->
   <!-- ===================================================================== -->
   <div id="printView" class="hidden p-4">
     <div class="border-b-2 border-slate-900 pb-2 mb-3 flex justify-between items-end">
@@ -325,28 +408,28 @@
   </div>
 
   <!-- ===================================================================== -->
-  <!-- DRAWER: FERRAMENTAS CLÍNICAS (CALCULADORAS + LABS + IMPRESSÃO A4)     -->
+  <!-- DRAWER: FERRAMENTAS (ADULTO, PEDIATRIA, SMART PASTE, IMPRESSÃO/BACKUP)-->
   <!-- ===================================================================== -->
   <div id="toolsDrawer" class="no-print modal-backdrop hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex justify-end">
     <div class="bg-white dark:bg-[#0F172A] border-l border-slate-200 dark:border-slate-800 w-full max-w-md h-full flex flex-col shadow-2xl">
       <div class="px-5 py-3.5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-        <h3 class="text-sm font-bold">🧰 Ferramentas de Plantão</h3>
+        <h3 class="text-sm font-bold">🧰 Ferramentas Clínicas</h3>
         <button id="btnCloseTools" type="button" class="text-slate-400 hover:text-slate-700 dark:hover:text-white text-sm">✕</button>
       </div>
 
-      <div class="px-5 pt-2 border-b border-slate-200 dark:border-slate-800 flex gap-3 text-xs">
-        <button type="button" data-tool-tab="calc" class="tool-tab-btn pb-2 font-bold border-b-2 border-teal-700 text-teal-700 dark:text-teal-400">Calculadoras</button>
-        <button type="button" data-tool-tab="labs" class="tool-tab-btn pb-2 font-medium border-b-2 border-transparent text-slate-500">Compactar Labs</button>
-        <button type="button" data-tool-tab="export" class="tool-tab-btn pb-2 font-medium border-b-2 border-transparent text-slate-500">Imprimir &amp; Backup</button>
+      <div class="px-5 pt-2 border-b border-slate-200 dark:border-slate-800 flex gap-3 overflow-x-auto text-xs">
+        <button type="button" data-tool-tab="adult" class="tool-tab-btn pb-2 font-bold border-b-2 border-teal-700 text-teal-700 dark:text-teal-400 shrink-0">Adulto</button>
+        <button type="button" data-tool-tab="peds" class="tool-tab-btn pb-2 font-medium border-b-2 border-transparent text-slate-500 shrink-0">Pediatria</button>
+        <button type="button" data-tool-tab="smart" class="tool-tab-btn pb-2 font-medium border-b-2 border-transparent text-slate-500 shrink-0">Smart Paste</button>
+        <button type="button" data-tool-tab="export" class="tool-tab-btn pb-2 font-medium border-b-2 border-transparent text-slate-500 shrink-0">Imprimir &amp; Backup</button>
       </div>
 
       <div class="flex-1 overflow-y-auto p-5 space-y-4">
-        <!-- Tab 1: Calculadoras -->
-        <div id="toolTabCalc" class="space-y-4">
-          <!-- Cockcroft-Gault -->
+        <!-- Tab 1: Adulto -->
+        <div id="toolTabAdult" class="space-y-4">
           <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2">
             <div class="flex justify-between items-center">
-              <span class="text-xs font-bold text-teal-700 dark:text-teal-400">Clearance de Creatinina</span>
+              <span class="text-xs font-bold text-teal-700 dark:text-teal-400">Clearance de Creatinina (Cockcroft-Gault)</span>
               <button id="btnInsCrCl" type="button" class="text-[11px] font-semibold text-teal-700 dark:text-teal-400 hover:underline">Inserir</button>
             </div>
             <div class="grid grid-cols-4 gap-1.5 text-xs">
@@ -361,7 +444,6 @@
             <div id="cgOut" class="text-xs mono text-slate-700 dark:text-slate-300"></div>
           </div>
 
-          <!-- Sódio Corrigido -->
           <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2">
             <div class="flex justify-between items-center">
               <span class="text-xs font-bold text-teal-700 dark:text-teal-400">Sódio Corrigido (Katz)</span>
@@ -374,10 +456,9 @@
             <div id="naOut" class="text-xs mono text-slate-700 dark:text-slate-300"></div>
           </div>
 
-          <!-- Bomba DVA -->
           <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2">
             <div class="flex justify-between items-center">
-              <span class="text-xs font-bold text-teal-700 dark:text-teal-400">Bomba de Infusão (DVA)</span>
+              <span class="text-xs font-bold text-teal-700 dark:text-teal-400">Bomba de Infusão DVA</span>
               <button id="btnInsVaso" type="button" class="text-[11px] font-semibold text-teal-700 dark:text-teal-400 hover:underline">Inserir</button>
             </div>
             <div class="grid grid-cols-3 gap-1.5 text-xs">
@@ -392,7 +473,6 @@
             <div id="vasoOut" class="text-xs mono text-slate-700 dark:text-slate-300"></div>
           </div>
 
-          <!-- Peso Predito VM / IMC -->
           <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2">
             <div class="flex justify-between items-center">
               <span class="text-xs font-bold text-teal-700 dark:text-teal-400">IMC &amp; Peso Predito (VM 6 mL/kg)</span>
@@ -410,22 +490,31 @@
           </div>
         </div>
 
-        <!-- Tab 2: Compactador de Exames -->
-        <div id="toolTabLabs" class="hidden space-y-3">
-          <p class="text-xs text-slate-500">Cole os exames brutos do sistema do hospital (MV/Tasy) para gerar a linha limpa automaticamente:</p>
-          <textarea id="labRawInput" rows="5" placeholder="Ex: Hemoglobina: 12,4&#10;Leucócitos: 11200&#10;Plaquetas: 230000&#10;Creatinina: 1,1&#10;Potássio: 4,3" class="w-full p-3 text-xs mono rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800"></textarea>
-          <div id="labCompactPreview" class="p-3 rounded-xl bg-teal-50/70 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-800 text-xs mono text-teal-800 dark:text-teal-300 break-words">
-            #LABS: 
+        <!-- Tab 2: Calculadora Pediátrica por Peso -->
+        <div id="toolTabPeds" class="hidden space-y-3">
+          <div class="flex items-center gap-2">
+            <label class="text-xs font-semibold text-slate-500">Peso da criança (kg):</label>
+            <input id="pedsWeightInput" type="number" step="0.5" min="1" max="80" value="15" class="w-24 px-2.5 py-1.5 text-sm mono font-bold rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 focus:outline-none focus:border-teal-600" />
           </div>
-          <button id="btnInsertCompactLabs" type="button" class="w-full py-2 rounded-xl text-xs font-semibold bg-teal-700 text-white hover:bg-teal-800 transition">
-            Inserir na Evolução do Paciente
+          <div id="pedsDosesList" class="space-y-1.5 text-xs"></div>
+        </div>
+
+        <!-- Tab 3: Smart Paste (Colar caso do WhatsApp -> Novo Paciente) -->
+        <div id="toolTabSmart" class="hidden space-y-3">
+          <p class="text-xs text-slate-500">Cole um texto recebido no WhatsApp ou prontuário. O sistema extrai Leito, Iniciais, Idade, Setor e Hipótese Diagnóstica e cria a ficha automaticamente.</p>
+          <textarea id="smartPasteInput" rows="7" placeholder="Ex: Sala Vermelha - Leito 03 - J.M.S., 64 anos&#10;HD: Sepse de foco pulmonar&#10;Paciente em uso de Noradrenalina..." class="w-full p-3 text-xs mono rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800"></textarea>
+          <button id="btnRunSmartPaste" type="button" class="w-full py-2.5 rounded-xl text-xs font-semibold bg-teal-700 text-white hover:bg-teal-800 transition">
+            ✨ Criar Paciente Automaticamente
           </button>
         </div>
 
-        <!-- Tab 3: Impressão & Backup -->
-        <div id="toolTabExport" class="hidden space-y-3">
+        <!-- Tab 4: Impressão & Backup -->
+        <div id="toolTabExport" class="hidden space-y-2.5">
           <button id="btnPrintA4" type="button" class="w-full py-2.5 rounded-xl text-xs font-semibold bg-teal-700 text-white hover:bg-teal-800 transition">
             🖨️ Imprimir Passagem de Plantão (A4 - 2 Colunas)
+          </button>
+          <button id="btnExportZapDrawer" type="button" class="w-full py-2.5 rounded-xl text-xs font-semibold bg-emerald-600 text-white hover:bg-emerald-700 transition">
+            💬 Copiar Pacientes Ativos p/ WhatsApp
           </button>
           <button id="btnDownloadJson" type="button" class="w-full py-2.5 rounded-xl text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 transition">
             📦 Baixar Backup (.JSON)
@@ -440,30 +529,26 @@
   </div>
 
   <!-- ===================================================================== -->
-  <!-- MODAL: CONFIGURAÇÃO DE NUVEM (APPS SCRIPT) & PAINEL ADMINISTRADOR     -->
+  <!-- MODAL: NUVEM, PIN OPCIONAL & PAINEL ADMINISTRADOR                     -->
   <!-- ===================================================================== -->
   <div id="settingsModal" class="no-print modal-backdrop hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-    <div class="bg-white dark:bg-[#0F172A] border border-slate-200 dark:border-slate-800 rounded-2xl max-w-lg w-full p-5 shadow-2xl space-y-4">
+    <div class="bg-white dark:bg-[#0F172A] border border-slate-200 dark:border-slate-800 rounded-2xl max-w-lg w-full p-5 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
       <div class="flex items-center justify-between">
-        <div class="flex gap-3 text-sm">
-          <button id="settingsTabCloudBtn" type="button" class="font-bold text-teal-700 dark:text-teal-400 border-b-2 border-teal-700 pb-1">☁️ Nuvem (Apps Script)</button>
-          <button id="settingsTabAdminBtn" type="button" class="font-medium text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 pb-1">🛡️ Administrador</button>
+        <div class="flex gap-3 text-xs sm:text-sm">
+          <button id="settingsTabCloudBtn" type="button" class="font-bold text-teal-700 dark:text-teal-400 border-b-2 border-teal-700 pb-1">☁️ Nuvem</button>
+          <button id="settingsTabPinBtn" type="button" class="font-medium text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 pb-1">🔒 PIN</button>
+          <button id="settingsTabAdminBtn" type="button" class="font-medium text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 pb-1">🛡️ Admin</button>
         </div>
         <button id="btnCloseSettings" type="button" class="text-slate-400 hover:text-slate-700 dark:hover:text-white text-sm">✕</button>
       </div>
 
-      <!-- SUB-PANEL 1: CLOUD SYNC & DIAGNOSTIC -->
+      <!-- TAB 1: NUVEM -->
       <div id="settingsCloudPanel" class="space-y-3">
         <p class="text-xs text-slate-500 dark:text-slate-400">
-          Cole abaixo a URL da implantação do seu <code class="mono text-teal-600">Code.gs</code> (terminada em <code class="mono">/exec</code>) com acesso configurado para <strong>Qualquer pessoa</strong>.
+          URL do seu Web App do Google Apps Script (<code class="mono text-teal-600">/exec</code>) com acesso configurado para <strong>Qualquer pessoa</strong>.
         </p>
-        <div>
-          <label class="block text-[11px] font-semibold text-slate-500 mb-1">URL do Web App (Google Apps Script)</label>
-          <input id="cloudUrlInput" type="url" placeholder="https://script.google.com/macros/s/.../exec" class="w-full px-3 py-2 text-xs mono rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 focus:outline-none focus:border-teal-600" />
-        </div>
-
+        <input id="cloudUrlInput" type="url" placeholder="https://script.google.com/macros/s/.../exec" class="w-full px-3 py-2 text-xs mono rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 focus:outline-none focus:border-teal-600" />
         <div id="cloudDiagnosticBox" class="hidden p-3 rounded-xl text-xs border"></div>
-
         <div class="flex flex-wrap items-center justify-between gap-2 pt-1">
           <button id="btnTestCloud" type="button" class="px-3 py-2 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 transition">
             🩺 Testar Conexão
@@ -474,12 +559,24 @@
         </div>
       </div>
 
-      <!-- SUB-PANEL 2: ADMIN PANEL (KAIO SPECIAL POWERS) -->
-      <div id="settingsAdminPanel" class="hidden space-y-3">
-        <!-- Admin Login Box -->
+      <!-- TAB 2: PIN OPCIONAL DO CADERNO -->
+      <div id="settingsPinPanel" class="hidden space-y-3">
+        <p class="text-xs text-slate-500 dark:text-slate-400">
+          Opcional: defina um PIN de 4 dígitos para proteger o caderno <code id="pinSettingsSlug" class="mono text-teal-600">/usuario</code> contra acessos diretos pela URL. Deixe em branco e salve para remover a proteção.
+        </p>
+        <div class="flex gap-2">
+          <input id="pinSetInput" type="password" inputmode="numeric" maxlength="12" placeholder="Novo PIN (ex: 1234) ou vazio p/ remover" class="flex-1 px-3 py-2 text-xs mono rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 focus:outline-none focus:border-teal-600" />
+          <button id="btnSavePin" type="button" class="px-4 py-2 rounded-xl text-xs font-semibold bg-teal-700 text-white hover:bg-teal-800 transition">
+            Aplicar PIN
+          </button>
+        </div>
+      </div>
+
+      <!-- TAB 3: PAINEL ADMINISTRADOR -->
+      <div id="settingsAdminPanel" class="hidden space-y-4">
         <form id="adminLoginForm" class="space-y-2.5">
           <p class="text-xs text-slate-500 dark:text-slate-400">
-            Área restrita do Administrador. Informe a chave definida em <code class="mono">ADMIN_KEY</code> no seu <code class="mono">Code.gs</code> para gerenciar cadernos e avisos globais.
+            Área do Administrador. Informe a chave definida em <code class="mono">ADMIN_KEY</code> no <code class="mono">Code.gs</code>.
           </p>
           <div class="flex gap-2">
             <input id="adminKeyInput" type="password" placeholder="Chave de Administrador..." class="flex-1 px-3 py-2 text-xs mono rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 focus:outline-none focus:border-teal-600" />
@@ -488,7 +585,6 @@
           <div id="adminAuthError" class="hidden text-xs text-rose-600 font-medium"></div>
         </form>
 
-        <!-- Admin Dashboard (Shown after auth) -->
         <div id="adminDashboard" class="hidden space-y-4">
           <div class="grid grid-cols-2 gap-2 text-center">
             <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
@@ -501,29 +597,40 @@
             </div>
           </div>
 
-          <!-- Global Notice Control -->
+          <!-- Global Notice -->
           <div class="space-y-1.5">
-            <label class="block text-[11px] font-semibold text-slate-500">Aviso Global (aparece no topo para todos os usuários)</label>
+            <label class="block text-[11px] font-semibold text-slate-500">Aviso Global (topo do site para todos)</label>
             <div class="flex gap-2">
-              <input id="adminNoticeInput" type="text" placeholder="Ex: Manutenção programada ou novidade..." class="flex-1 px-3 py-1.5 text-xs rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800" />
+              <input id="adminNoticeInput" type="text" placeholder="Mensagem de aviso..." class="flex-1 px-3 py-1.5 text-xs rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800" />
               <button id="btnSaveGlobalNotice" type="button" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-teal-700 text-white hover:bg-teal-800">Publicar</button>
             </div>
           </div>
 
-          <!-- All Users List -->
-          <div class="space-y-1.5">
+          <!-- Default Protocols for New Users -->
+          <div class="space-y-1.5 pt-2 border-t border-slate-100 dark:border-slate-800">
             <div class="flex items-center justify-between">
-              <span class="text-[11px] font-semibold text-slate-500 uppercase">Todos os Cadernos Cadastrados</span>
+              <label class="text-[11px] font-semibold text-slate-500">Condutas Padrão (para todos os novos cadernos)</label>
+              <button id="btnPushCurrentProtocolsAsDefault" type="button" class="text-[11px] font-semibold text-teal-700 dark:text-teal-400 hover:underline">
+                Usar minhas condutas atuais como padrão
+              </button>
+            </div>
+            <p id="adminDefaultProtoStatus" class="text-[11px] text-slate-400">0 condutas padrão definidas na nuvem.</p>
+          </div>
+
+          <!-- All Users List -->
+          <div class="space-y-1.5 pt-2 border-t border-slate-100 dark:border-slate-800">
+            <div class="flex items-center justify-between">
+              <span class="text-[11px] font-semibold text-slate-500 uppercase">Cadernos Cadastrados</span>
               <button id="btnRefreshAdminList" type="button" class="text-[11px] text-teal-700 dark:text-teal-400 hover:underline">Atualizar</button>
             </div>
-            <div id="adminUsersList" class="max-h-52 overflow-y-auto space-y-1.5 pr-1"></div>
+            <div id="adminUsersList" class="max-h-48 overflow-y-auto space-y-1.5 pr-1"></div>
           </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- INLINE CONFIRMATION MODAL (No native confirm()) -->
+  <!-- INLINE CONFIRMATION MODAL -->
   <div id="confirmModal" class="no-print modal-backdrop hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
     <div class="bg-white dark:bg-[#0F172A] border border-slate-200 dark:border-slate-800 rounded-2xl max-w-xs w-full p-5 shadow-2xl space-y-4">
       <p id="confirmModalText" class="text-xs font-medium text-slate-700 dark:text-slate-200"></p>
@@ -540,26 +647,73 @@
   <script>
     // =========================================================================
     // CONFIGURAÇÃO GLOBAL DO ADMINISTRADOR
-    // Cole abaixo a URL terminada em /exec do seu Google Apps Script.
-    // Assim, qualquer pessoa que acessar o site no GitHub já sincroniza direto!
+    // Cole abaixo a URL /exec do seu Google Apps Script antes de subir no GitHub.
     // =========================================================================
     const DEFAULT_API_URL = '';
 
-    const STORAGE_PREFIX = 'caderninho_v3_db_';
-    const RECENT_KEY = 'caderninho_v3_recent';
-    const CLOUD_URL_KEY = 'caderninho_v3_api_url';
-    const THEME_KEY = 'caderninho_v3_theme';
+    const STORAGE_PREFIX = 'caderninho_v4_db_';
+    const PENDING_PREFIX = 'caderninho_v4_pending_';
+    const PIN_CACHE_PREFIX = 'caderninho_v4_pin_';
+    const RECENT_KEY = 'caderninho_v4_recent';
+    const CLOUD_URL_KEY = 'caderninho_v4_api_url';
+    const THEME_KEY = 'caderninho_v4_theme';
+
+    const EXAM_SYSTEMS = [
+      { key: 'geral', label: 'Geral', normalText: 'BEG, LOTE, corado, hidratado, acianótico, anictérico, afebril' },
+      { key: 'acv', label: 'ACV', normalText: 'RCR em 2T, BNF, sem sopros, TEC < 3s' },
+      { key: 'ar', label: 'AR', normalText: 'MV+ bilateralmente sem ruídos adventícios, eupneico em AA' },
+      { key: 'abd', label: 'ABD', normalText: 'Plano, flácido, RHA+, indolor à palpação, sem VMG ou sinais de irritação peritoneal' },
+      { key: 'neuro', label: 'Neuro', normalText: 'Glasgow 15, pupilas isocóricas e fotorreagentes, sem déficits motores focais' },
+      { key: 'ext', label: 'Extremidades', normalText: 'Sem edemas, panturrilhas livres, pulsos periféricos simétricos' }
+    ];
 
     const SLASH_TEMPLATES = {
-      '/upa': `HISTÓRIA CLÍNICA: \n#HPP: \n#MUC: \n#EVOLUÇÃO: BEG, LOTE, corado, hidratado, acianótico, anictérico, afebril.\nACV: RCR 2T BNF s/ sopros | AR: MV+ bilateral s/ RA\nABD: Plano, flácido, RHA+, indolor | EXT: s/ edemas, panturrilhas livres.\n#EXAMES LABORATORIAIS: \n#EX DE IMAGEM: \n#CD:\n- `,
-      '/soap': `#S (Subjetivo): \n#O (Objetivo): BEG, LOTE, eupneico em AA. PA: 120x80 | FC: 76 | SpO2: 98%.\n#A (Avaliação): \n#P (Plano):\n- `,
-      '/exame': `BEG, LOTE, corado, hidratado, acianótico, anictérico, afebril.\nACV: RCR 2T BNF s/ sopros. TEC < 3s.\nAR: MV+ bilateralmente s/ RA.\nABD: Plano, flácido, RHA+, indolor à palpação.\nNEURO: Glasgow 15, pupilas isofoto, s/ déficits focais.\nEXT: s/ edemas, panturrilhas livres.`,
-      '/sv': `[SALA VERMELHA]\n#DISPOSITIVOS: TOT nº __ | CVC em __ | SVD\n#DVA / SEDAÇÃO: Noradrenalina __ mL/h | Fentanil __ mL/h | Midazolam __ mL/h\n#VM: VCV | FiO2: __% | PEEP: __ | VC: __ | FR: __\n#GASO: pH __ / pCO2 __ / pO2 __ / HCO3 __ / Lac __\n#CD:\n- Metas: PAM >= 65 mmHg | SpO2 92-96%`,
-      '/ssvv': `PA: 120x80 mmHg | FC: 78 bpm | FR: 16 irpm | SpO2: 98% AA | Tax: 36.5°C | HGT: 95 mg/dL`
+      '/upa': `HISTÓRIA CLÍNICA: \n#HPP: \n#MUC: \n#EVOLUÇÃO: \n#CD:\n- [ ] `,
+      '/soap': `#S (Subjetivo): \n#O (Objetivo): \n#A (Avaliação): \n#P (Plano):\n- [ ] `,
+      '/sv': `[SALA VERMELHA]\n#DISPOSITIVOS: TOT nº __ | CVC em __ | SVD\n#DVA / SEDAÇÃO: Noradrenalina __ mL/h | Fentanil __ mL/h | Midazolam __ mL/h\n#VM: VCV | FiO2: __% | PEEP: __ | VC: __ | FR: __\n#CD:\n- [ ] Metas: PAM >= 65 mmHg | SpO2 92-96%`,
+      '/pend': `- [ ] `
     };
 
-    function createEmptyNotebook() {
+    function createDefaultExamState() {
+      return {
+        pa: '', fc: '', fr: '', spo2: '', tax: '', hgt: '',
+        systems: {
+          geral: { status: 'normal', text: '' },
+          acv: { status: 'normal', text: '' },
+          ar: { status: 'normal', text: '' },
+          abd: { status: 'normal', text: '' },
+          neuro: { status: 'normal', text: '' },
+          ext: { status: 'normal', text: '' }
+        }
+      };
+    }
+
+    function createDefaultLabsState() {
+      return {
+        date: new Date().toISOString().slice(0, 10),
+        hb: '', ht: '', leuco: '', bands: '', plaq: '',
+        ur: '', cr: '', na: '', k: '', pcr: '',
+        others: '', imaging: ''
+      };
+    }
+
+    function createEmptyNotebook(remoteDefaultProtocols = []) {
       const todayIso = new Date().toISOString().slice(0, 10);
+      const baseProtocols = remoteDefaultProtocols.length ? remoteDefaultProtocols : [
+        {
+          id: 'pro_1',
+          title: 'Diluições de Emergência (DVA)',
+          category: 'Emergência',
+          content: `• Noradrenalina Padrão (64 mcg/mL): 4 amp (16mL) + 234mL SG 5%\n• Noradrenalina Dobrada (128 mcg/mL): 8 amp (32mL) + 218mL SG 5%\n• Dobutamina (1000 mcg/mL): 1 amp (20mL) + 230mL SG 5%\n• Amiodarona Ataque: 150mg (3mL) + 100mL SG 5% em 10-15 min`
+        },
+        {
+          id: 'pro_2',
+          title: 'Sequência Rápida de Intubação (70kg)',
+          category: 'Via Aérea',
+          content: `• Etomidato (0,3 mg/kg): 1 amp (20mg/10mL) EV bolus\n• Cetamina (1,5-2 mg/kg): 2 a 3 mL (50mg/mL) EV\n• Succinilcolina (1-1,5 mg/kg): 70 a 100 mg EV\n• Rocurônio (1,2 mg/kg): 8,5 mL (10mg/mL) EV`
+        }
+      ];
+
       return {
         updatedAtMs: Date.now(),
         patients: [
@@ -573,37 +727,40 @@
             diagnosis: 'Pneumonia Adquirida na Comunidade',
             allergy: '',
             archived: false,
-            notes: `HISTÓRIA CLÍNICA: Tosse produtiva e febre há 3 dias.\n#HPP: HAS.\n#EVOLUÇÃO: REG, LOTE, eupneico em ar ambiente. PA 124x78 mmHg | FC 84 bpm | SpO2 96%.\n#LABS: Hb 13.4 | Leuco 13.800 | PCR 72 | Cr 0.9 | Na 138 | K 4.1\n#CD:\n- Antibioticoterapia EV\n- Reavaliar curva térmica e exames em 24h`
+            exam: createDefaultExamState(),
+            labs: { ...createDefaultLabsState(), hb: '13.4', ht: '40%', leuco: '14.200', bands: '8', plaq: '235.000', ur: '38', cr: '0.9', na: '138', k: '4.1', pcr: '72' },
+            notes: `HISTÓRIA CLÍNICA: Tosse produtiva e febre há 3 dias.\n#HPP: HAS.\n#CD:\n- [ ] Checar hemoculturas\n- [ ] Reavaliar curva térmica em 24h`
           }
         ],
-        protocols: [
-          {
-            id: 'pro_1',
-            title: 'Diluições de Emergência (DVA)',
-            category: 'Emergência',
-            content: `• Noradrenalina Padrão (64 mcg/mL): 4 amp (16mL) + 234mL SG 5%\n• Noradrenalina Dobrada (128 mcg/mL): 8 amp (32mL) + 218mL SG 5%\n• Dobutamina (1000 mcg/mL): 1 amp (20mL) + 230mL SG 5%\n• Amiodarona Ataque: 150mg (3mL) + 100mL SG 5% em 10-15 min`
-          },
-          {
-            id: 'pro_2',
-            title: 'Sequência Rápida de Intubação (70kg)',
-            category: 'Via Aérea',
-            content: `• Etomidato (0,3 mg/kg): 1 amp (20mg/10mL) EV bolus\n• Cetamina (1,5-2 mg/kg): 2 a 3 mL (50mg/mL) EV\n• Succinilcolina (1-1,5 mg/kg): 70 a 100 mg EV\n• Rocurônio (1,2 mg/kg): 8,5 mL (10mg/mL) EV`
-          }
-        ]
+        protocols: JSON.parse(JSON.stringify(baseProtocols))
       };
+    }
+
+    function ensurePatientStructure(p) {
+      if (!p.exam) p.exam = createDefaultExamState();
+      if (!p.exam.systems) p.exam.systems = createDefaultExamState().systems;
+      EXAM_SYSTEMS.forEach(s => {
+        if (!p.exam.systems[s.key]) p.exam.systems[s.key] = { status: 'normal', text: '' };
+      });
+      if (!p.labs) p.labs = createDefaultLabsState();
+      return p;
     }
 
     // App State
     let state = {
       slug: '',
-      activeTab: 'active', // 'active' | 'archived' | 'protocols'
+      activeTab: 'active',
       sectorFilter: 'all',
       searchQuery: '',
       selectedId: null,
       privacy: false,
       apiUrl: '',
       adminKey: '',
+      currentPinHash: '',
+      remoteDefaultProtocols: [],
       isFetching: false,
+      examPanelOpen: false,
+      labsPanelOpen: false,
       db: null
     };
 
@@ -614,34 +771,42 @@
       try {
         const v = localStorage.getItem(key);
         return v ? JSON.parse(v) : fallback;
-      } catch (e) {
-        return fallback;
-      }
+      } catch (e) { return fallback; }
     }
 
     function safeSet(key, val) {
-      try {
-        localStorage.setItem(key, JSON.stringify(val));
-      } catch (e) {}
+      try { localStorage.setItem(key, JSON.stringify(val)); } catch (e) {}
     }
 
     function sanitizeSlug(raw) {
-      return String(raw || '')
-        .trim()
-        .toLowerCase()
-        .replace(/[^a-z0-9_-]/g, '');
+      return String(raw || '').trim().toLowerCase().replace(/[^a-z0-9_-]/g, '');
     }
 
     function getActiveApiUrl() {
-      const saved = safeGet(CLOUD_URL_KEY, '');
-      return (saved || DEFAULT_API_URL || '').trim();
+      return (safeGet(CLOUD_URL_KEY, '') || DEFAULT_API_URL || '').trim();
+    }
+
+    // Lightweight deterministic hash for optional 4-digit PIN
+    async function hashPin(slug, pin) {
+      const raw = `${slug}::caderninho::${String(pin).trim()}`;
+      if (window.crypto && window.crypto.subtle) {
+        try {
+          const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(raw));
+          return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+        } catch (e) {}
+      }
+      let h = 2166136261;
+      for (let i = 0; i < raw.length; i++) {
+        h ^= raw.charCodeAt(i);
+        h = Math.imul(h, 16777619);
+      }
+      return 'fnv_' + (h >>> 0).toString(16);
     }
 
     function addRecentSlug(slug) {
-      const list = safeGet(RECENT_KEY, []);
-      const filtered = list.filter(x => x !== slug);
-      filtered.unshift(slug);
-      safeSet(RECENT_KEY, filtered.slice(0, 8));
+      const list = safeGet(RECENT_KEY, []).filter(x => x !== slug);
+      list.unshift(slug);
+      safeSet(RECENT_KEY, list.slice(0, 8));
     }
 
     function calcDaysFromIso(iso) {
@@ -656,12 +821,13 @@
       return diff >= 0 ? diff : null;
     }
 
+    function countInlinePendings(notes) {
+      const m = String(notes || '').match(/\[\s\]/g);
+      return m ? m.length : 0;
+    }
+
     function escapeHtml(s) {
-      return String(s || '')
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;');
+      return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 
     let toastTimeout = null;
@@ -676,9 +842,7 @@
     function copyText(text, msg = 'Copiado!') {
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(text).then(() => showToast(msg)).catch(() => fallbackCopy(text, msg));
-      } else {
-        fallbackCopy(text, msg);
-      }
+      } else { fallbackCopy(text, msg); }
     }
 
     function fallbackCopy(text, msg) {
@@ -688,10 +852,7 @@
       t.style.opacity = '0';
       document.body.appendChild(t);
       t.select();
-      try {
-        document.execCommand('copy');
-        showToast(msg);
-      } catch (e) {}
+      try { document.execCommand('copy'); showToast(msg); } catch (e) {}
       document.body.removeChild(t);
     }
 
@@ -702,15 +863,284 @@
     }
 
     // =========================================================================
-    // NAVIGATION: LANDING PORTAL <-> NOTEBOOK WORKSPACE
+    // FORMATTERS: SSVV + EXAME FÍSICO & EXAMES COMPLEMENTARES (PADRÃO KAIO)
+    // =========================================================================
+    function buildExamText(exam) {
+      if (!exam) return '';
+      const vitals = [
+        exam.pa ? `PA: ${exam.pa} mmHg` : '',
+        exam.fc ? `FC: ${exam.fc} bpm` : '',
+        exam.fr ? `FR: ${exam.fr} irpm` : '',
+        exam.spo2 ? `SpO2: ${exam.spo2}` : '',
+        exam.tax ? `Tax: ${exam.tax}°C` : '',
+        exam.hgt ? `HGT: ${exam.hgt} mg/dL` : ''
+      ].filter(Boolean);
+
+      const sysLines = [];
+      EXAM_SYSTEMS.forEach(s => {
+        const st = exam.systems && exam.systems[s.key];
+        if (!st) return;
+        if (st.status === 'altered' && st.text.trim()) {
+          sysLines.push(`${s.label}: ${st.text.trim()}`);
+        } else if (st.status === 'normal') {
+          sysLines.push(`${s.label}: ${s.normalText}`);
+        }
+      });
+
+      const hasAnyInput = vitals.length > 0 || EXAM_SYSTEMS.some(s => exam.systems[s.key]?.status === 'altered');
+      if (!hasAnyInput && !state.examPanelOpen) return '';
+
+      const out = [];
+      if (vitals.length) out.push(`SSVV: ${vitals.join(' | ')}`);
+      if (sysLines.length) out.push(`Exame Físico:\n${sysLines.join('\n')}`);
+      return out.join('\n');
+    }
+
+    function buildLabsText(labs) {
+      if (!labs) return '';
+      const dateFormatted = labs.date ? labs.date.split('-').reverse().join('/') : new Date().toLocaleDateString('pt-BR');
+
+      // Hemograma com análise automática de bastões (viral vs bacteriano)
+      const hemoParts = [];
+      if (labs.hb && labs.hb.trim()) hemoParts.push(`hb ${labs.hb.trim()}`);
+      if (labs.ht && labs.ht.trim()) hemoParts.push(`ht ${labs.ht.trim()}`);
+      if (labs.leuco && labs.leuco.trim()) {
+        let leucoStr = `leuco ${labs.leuco.trim()}`;
+        if (labs.bands !== '' && labs.bands !== null && labs.bands !== undefined) {
+          const bNum = parseFloat(String(labs.bands).replace(',', '.'));
+          if (!isNaN(bNum)) {
+            const pattern = bNum >= 5 ? 'predomínio bacteriano' : 'predomínio viral';
+            leucoStr += ` (${pattern} - ${bNum}% bastões)`;
+          }
+        }
+        hemoParts.push(leucoStr);
+      }
+      if (labs.plaq && labs.plaq.trim()) hemoParts.push(`plaquetas ${labs.plaq.trim()}`);
+
+      // Demais bioquímicas
+      const bioParts = [];
+      if (labs.ur && labs.ur.trim()) bioParts.push(`ur ${labs.ur.trim()}`);
+      if (labs.cr && labs.cr.trim()) bioParts.push(`cr ${labs.cr.trim()}`);
+      if (labs.na && labs.na.trim()) bioParts.push(`na ${labs.na.trim()}`);
+      if (labs.k && labs.k.trim()) bioParts.push(`k ${labs.k.trim()}`);
+      if (labs.pcr && labs.pcr.trim()) bioParts.push(`pcr ${labs.pcr.trim()}`);
+      if (labs.others && labs.others.trim()) bioParts.push(labs.others.trim());
+
+      const allLabItems = [...hemoParts, ...bioParts];
+      const lines = [];
+
+      if (allLabItems.length > 0) {
+        const prefix = hemoParts.length > 0
+          ? `Laboratoriais dia ${dateFormatted} - hemograma - `
+          : `Laboratoriais dia ${dateFormatted} - `;
+        lines.push(prefix + allLabItems.join(' / '));
+      }
+      if (labs.imaging && labs.imaging.trim()) {
+        lines.push(`Imagem / ECG: ${labs.imaging.trim()}`);
+      }
+
+      if (!lines.length) return '';
+      return `Exames complementares\n${lines.join('\n')}`;
+    }
+
+    function formatPatientForPep(p, forWhatsApp = false) {
+      ensurePatientStructure(p);
+      const days = calcDaysFromIso(p.admissionDate);
+      const diFormatted = p.admissionDate ? p.admissionDate.split('-').reverse().join('/') : '';
+      const bold = s => (forWhatsApp ? `*${s}*` : s);
+
+      const title = [p.bed ? `LEITO ${p.bed}` : '', p.name || '', p.age || ''].filter(Boolean).join(' - ');
+      const meta = [
+        diFormatted ? `DI: ${diFormatted}${days !== null ? ` (D${days})` : ''}` : '',
+        p.diagnosis ? `HD: ${p.diagnosis}` : '',
+        p.allergy ? `ALERGIA: ${p.allergy}` : ''
+      ].filter(Boolean).join(' | ');
+
+      const blocks = [];
+      if (title) blocks.push(bold(title));
+      if (meta) blocks.push(meta);
+      if (p.notes && p.notes.trim()) blocks.push(p.notes.trim());
+
+      const examStr = buildExamText(p.exam);
+      if (examStr && !(p.notes || '').includes('Exame Físico:')) blocks.push(examStr);
+
+      const labsStr = buildLabsText(p.labs);
+      if (labsStr && !(p.notes || '').includes('Exames complementares')) blocks.push(labsStr);
+
+      return blocks.join('\n\n');
+    }
+
+    // =========================================================================
+    // CLOUD SYNC + OFFLINE QUEUE (AUTO-FLUSH WHEN ONLINE)
+    // =========================================================================
+    function setSyncStatus(mode, text) {
+      const dot = document.getElementById('syncDot');
+      const label = document.getElementById('syncLabel');
+      if (mode === 'saving') {
+        dot.className = 'w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse';
+        label.textContent = text || 'Salvando...';
+      } else if (mode === 'cloud') {
+        dot.className = 'w-1.5 h-1.5 rounded-full bg-teal-600';
+        label.textContent = text || 'Nuvem OK';
+      } else if (mode === 'pending') {
+        dot.className = 'w-1.5 h-1.5 rounded-full bg-amber-500';
+        label.textContent = text || 'Fila Offline';
+      } else if (mode === 'error') {
+        dot.className = 'w-1.5 h-1.5 rounded-full bg-rose-500';
+        label.textContent = text || 'Salvo Local';
+      } else {
+        dot.className = 'w-1.5 h-1.5 rounded-full bg-teal-600';
+        label.textContent = text || 'Salvo Local';
+      }
+    }
+
+    function applyGlobalNotice(text) {
+      const b = document.getElementById('globalNoticeBanner');
+      if (text && String(text).trim()) {
+        b.textContent = String(text).trim();
+        b.classList.remove('hidden');
+      } else {
+        b.classList.add('hidden');
+      }
+    }
+
+    async function fetchAppsScriptJson(url, options = {}) {
+      const res = await fetch(url, { ...options, redirect: 'follow' });
+      const text = await res.text();
+      if (text.trim().startsWith('<')) throw new Error('PERMISSION_HTML');
+      return JSON.parse(text);
+    }
+
+    async function pushToCloudNow(slug, dbPayload, extra = {}) {
+      if (!state.apiUrl) {
+        setSyncStatus('local');
+        return false;
+      }
+      if (!navigator.onLine) {
+        safeSet(PENDING_PREFIX + slug, true);
+        setSyncStatus('pending', 'Offline (na fila)');
+        return false;
+      }
+      try {
+        const json = await fetchAppsScriptJson(state.apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({
+            action: 'save',
+            user: slug,
+            pinHash: state.currentPinHash || safeGet(PIN_CACHE_PREFIX + slug, ''),
+            adminKey: state.adminKey || '',
+            data: dbPayload,
+            ...extra
+          })
+        });
+        if (json && json.ok) {
+          safeSet(PENDING_PREFIX + slug, false);
+          setSyncStatus('cloud');
+          return true;
+        }
+        safeSet(PENDING_PREFIX + slug, true);
+        setSyncStatus('error');
+        return false;
+      } catch (e) {
+        safeSet(PENDING_PREFIX + slug, true);
+        setSyncStatus('pending', 'Offline (na fila)');
+        return false;
+      }
+    }
+
+    function scheduleAutoSave() {
+      if (!state.slug || !state.db) return;
+      const targetSlug = state.slug;
+      state.db.updatedAtMs = Date.now();
+      safeSet(STORAGE_PREFIX + targetSlug, state.db);
+      safeSet(PENDING_PREFIX + targetSlug, true);
+      setSyncStatus('saving');
+
+      if (saveTimer) clearTimeout(saveTimer);
+      saveTimer = setTimeout(() => {
+        saveTimer = null;
+        if (!state.isFetching) pushToCloudNow(targetSlug, state.db);
+      }, 700);
+    }
+
+    async function flushOfflineQueue() {
+      if (!state.apiUrl || !navigator.onLine || !state.slug || !state.db) return;
+      if (safeGet(PENDING_PREFIX + state.slug, false)) {
+        setSyncStatus('saving', 'Sincronizando fila...');
+        const ok = await pushToCloudNow(state.slug, state.db);
+        if (ok) showToast('Alterações offline sincronizadas com a nuvem!');
+      }
+    }
+
+    async function pullFromCloud(slug) {
+      if (!state.apiUrl) return;
+      state.isFetching = true;
+      setSyncStatus('saving', 'Sincronizando...');
+      try {
+        const cachedPin = state.currentPinHash || safeGet(PIN_CACHE_PREFIX + slug, '');
+        const url = `${state.apiUrl}?action=load&user=${encodeURIComponent(slug)}&pinHash=${encodeURIComponent(cachedPin)}&adminKey=${encodeURIComponent(state.adminKey || '')}`;
+        const json = await fetchAppsScriptJson(url);
+        if (json.notice !== undefined) applyGlobalNotice(json.notice);
+        if (Array.isArray(json.defaultProtocols)) state.remoteDefaultProtocols = json.defaultProtocols;
+        if (slug !== state.slug) return;
+
+        // Caderno protegido por PIN
+        if (json.ok && json.locked) {
+          document.getElementById('workspaceScreen').classList.add('hidden');
+          document.getElementById('landingScreen').classList.add('hidden');
+          document.getElementById('pinLockSlugLabel').textContent = '/' + slug;
+          document.getElementById('pinUnlockError').classList.add('hidden');
+          document.getElementById('pinUnlockInput').value = '';
+          document.getElementById('pinLockScreen').classList.remove('hidden');
+          document.getElementById('pinUnlockInput').focus();
+          return;
+        }
+
+        if (json.ok && json.found && json.data && Array.isArray(json.data.patients)) {
+          const serverMs = Number(json.updatedAtMs) || 0;
+          const localMs = Number(state.db && state.db.updatedAtMs) || 0;
+          const hasPendingLocal = safeGet(PENDING_PREFIX + slug, false);
+
+          if (!hasPendingLocal && serverMs >= localMs) {
+            state.db = json.data;
+            state.db.patients = state.db.patients.map(ensurePatientStructure);
+            if (!Array.isArray(state.db.protocols)) state.db.protocols = [];
+            safeSet(STORAGE_PREFIX + slug, state.db);
+            const firstActive = state.db.patients.find(p => !p.archived);
+            state.selectedId = firstActive ? firstActive.id : null;
+            renderWorkspace();
+          } else if (hasPendingLocal) {
+            await pushToCloudNow(slug, state.db);
+          }
+          setSyncStatus('cloud');
+        } else {
+          // Novo caderno: se o Admin definiu protocolos padrão globais e o usuário ainda está no template inicial, aplica
+          if (state.remoteDefaultProtocols.length && !safeGet(STORAGE_PREFIX + slug + '_initialized', false)) {
+            state.db.protocols = JSON.parse(JSON.stringify(state.remoteDefaultProtocols));
+            safeSet(STORAGE_PREFIX + slug, state.db);
+            safeSet(STORAGE_PREFIX + slug + '_initialized', true);
+            renderWorkspace();
+          }
+          setSyncStatus('cloud', 'Pronto');
+        }
+      } catch (e) {
+        setSyncStatus(navigator.onLine ? 'error' : 'pending');
+      } finally {
+        state.isFetching = false;
+      }
+    }
+
+    // =========================================================================
+    // NAVIGATION
     // =========================================================================
     function showLandingScreen() {
-      flushLocalSave();
+      if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; }
+      if (state.slug && state.db) safeSet(STORAGE_PREFIX + state.slug, state.db);
       state.slug = '';
-      try {
-        window.history.replaceState(null, '', window.location.pathname);
-      } catch (e) {}
+      try { window.history.replaceState(null, '', window.location.pathname); } catch (e) {}
       document.getElementById('workspaceScreen').classList.add('hidden');
+      document.getElementById('pinLockScreen').classList.add('hidden');
       document.getElementById('landingScreen').classList.remove('hidden');
       renderLandingRecents();
     }
@@ -720,10 +1150,7 @@
       const wrap = document.getElementById('landingRecentWrapper');
       const pills = document.getElementById('landingRecentPills');
       pills.innerHTML = '';
-      if (!list.length) {
-        wrap.classList.add('hidden');
-        return;
-      }
+      if (!list.length) { wrap.classList.add('hidden'); return; }
       wrap.classList.remove('hidden');
       list.forEach(slug => {
         const b = document.createElement('button');
@@ -735,41 +1162,30 @@
       });
     }
 
-    function flushLocalSave() {
-      if (saveTimer) {
-        clearTimeout(saveTimer);
-        saveTimer = null;
-      }
-      if (state.slug && state.db) {
-        safeSet(STORAGE_PREFIX + state.slug, state.db);
-      }
-    }
-
     function openNotebook(rawSlug) {
-      flushLocalSave();
+      if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; }
+      if (state.slug && state.db) safeSet(STORAGE_PREFIX + state.slug, state.db);
+
       const slug = sanitizeSlug(rawSlug);
-      if (!slug) {
-        showToast('Digite uma URL válida.');
-        return;
-      }
+      if (!slug) { showToast('Digite uma URL válida.'); return; }
 
       state.slug = slug;
       state.activeTab = 'active';
       state.sectorFilter = 'all';
       state.searchQuery = '';
+      state.currentPinHash = safeGet(PIN_CACHE_PREFIX + slug, '');
       document.getElementById('librarySearch').value = '';
       addRecentSlug(slug);
 
-      try {
-        window.history.replaceState(null, '', '#/' + slug);
-      } catch (e) {}
+      try { window.history.replaceState(null, '', '#/' + slug); } catch (e) {}
 
       const localDb = safeGet(STORAGE_PREFIX + slug, null);
       if (localDb && Array.isArray(localDb.patients)) {
-        if (!Array.isArray(localDb.protocols)) localDb.protocols = createEmptyNotebook().protocols;
+        localDb.patients = localDb.patients.map(ensurePatientStructure);
+        if (!Array.isArray(localDb.protocols)) localDb.protocols = createEmptyNotebook(state.remoteDefaultProtocols).protocols;
         state.db = localDb;
       } else {
-        state.db = createEmptyNotebook();
+        state.db = createEmptyNotebook(state.remoteDefaultProtocols);
         safeSet(STORAGE_PREFIX + slug, state.db);
       }
 
@@ -778,197 +1194,45 @@
 
       document.getElementById('headerSlugText').textContent = '/' + slug;
       document.getElementById('landingScreen').classList.add('hidden');
+      document.getElementById('pinLockScreen').classList.add('hidden');
       document.getElementById('workspaceScreen').classList.remove('hidden');
 
       renderWorkspace();
 
-      if (state.apiUrl) {
-        pullFromCloud(slug);
-      }
+      if (state.apiUrl) pullFromCloud(slug);
     }
 
     // =========================================================================
-    // CLOUD SYNC (GOOGLE APPS SCRIPT WITH REDIRECT: FOLLOW & REAL DIAGNOSTICS)
-    // =========================================================================
-    function setSyncStatus(mode, text) {
-      const dot = document.getElementById('syncDot');
-      const label = document.getElementById('syncLabel');
-      if (mode === 'saving') {
-        dot.className = 'w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse';
-        label.textContent = text || 'Salvando...';
-      } else if (mode === 'cloud') {
-        dot.className = 'w-1.5 h-1.5 rounded-full bg-teal-600';
-        label.textContent = text || 'Nuvem OK';
-      } else if (mode === 'error') {
-        dot.className = 'w-1.5 h-1.5 rounded-full bg-rose-500';
-        label.textContent = text || 'Offline / Local';
-      } else {
-        dot.className = 'w-1.5 h-1.5 rounded-full bg-teal-600';
-        label.textContent = text || 'Salvo Local';
-      }
-    }
-
-    function applyGlobalNotice(text) {
-      const banner = document.getElementById('globalNoticeBanner');
-      if (text && String(text).trim()) {
-        banner.textContent = String(text).trim();
-        banner.classList.remove('hidden');
-      } else {
-        banner.classList.add('hidden');
-      }
-    }
-
-    async function fetchAppsScriptJson(url, options = {}) {
-      const res = await fetch(url, {
-        ...options,
-        redirect: 'follow'
-      });
-      const text = await res.text();
-      // Detecta se o Google devolveu tela de login HTML (erro clássico de permissão)
-      if (text.trim().startsWith('<')) {
-        throw new Error('PERMISSION_HTML');
-      }
-      return JSON.parse(text);
-    }
-
-    async function pullFromCloud(slug) {
-      if (!state.apiUrl) return;
-      state.isFetching = true;
-      setSyncStatus('saving', 'Sincronizando...');
-      try {
-        const url = `${state.apiUrl}?action=load&user=${encodeURIComponent(slug)}`;
-        const json = await fetchAppsScriptJson(url);
-        if (json.notice !== undefined) applyGlobalNotice(json.notice);
-        if (slug !== state.slug) return;
-
-        if (json.ok && json.found && json.data && Array.isArray(json.data.patients)) {
-          const serverMs = Number(json.updatedAtMs) || 0;
-          const localMs = Number(state.db && state.db.updatedAtMs) || 0;
-          if (serverMs >= localMs) {
-            state.db = json.data;
-            state.db.updatedAtMs = serverMs || Date.now();
-            if (!Array.isArray(state.db.protocols)) state.db.protocols = [];
-            safeSet(STORAGE_PREFIX + slug, state.db);
-            const firstActive = state.db.patients.find(p => !p.archived);
-            state.selectedId = firstActive ? firstActive.id : null;
-            renderWorkspace();
-          }
-          setSyncStatus('cloud');
-        } else {
-          setSyncStatus('cloud', 'Pronto');
-        }
-      } catch (err) {
-        setSyncStatus('error');
-      } finally {
-        state.isFetching = false;
-      }
-    }
-
-    function scheduleAutoSave() {
-      if (!state.slug || !state.db) return;
-      const targetSlug = state.slug;
-      state.db.updatedAtMs = Date.now();
-      safeSet(STORAGE_PREFIX + targetSlug, state.db);
-      setSyncStatus('saving');
-
-      if (saveTimer) clearTimeout(saveTimer);
-      saveTimer = setTimeout(async () => {
-        saveTimer = null;
-        if (!state.apiUrl || state.isFetching) {
-          setSyncStatus('local');
-          return;
-        }
-        try {
-          const json = await fetchAppsScriptJson(state.apiUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({
-              action: 'save',
-              user: targetSlug,
-              data: state.db
-            })
-          });
-          if (json && json.ok) {
-            setSyncStatus('cloud');
-          } else {
-            setSyncStatus('error');
-          }
-        } catch (err) {
-          setSyncStatus('error');
-        }
-      }, 700);
-    }
-
-    async function testCloudConnection() {
-      const rawUrl = document.getElementById('cloudUrlInput').value.trim();
-      const box = document.getElementById('cloudDiagnosticBox');
-      box.classList.remove('hidden');
-
-      if (!rawUrl) {
-        box.className = 'p-3 rounded-xl text-xs border bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300';
-        box.textContent = 'Cole a URL do Google Apps Script antes de testar.';
-        return;
-      }
-      if (rawUrl.endsWith('/dev')) {
-        box.className = 'p-3 rounded-xl text-xs border bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300';
-        box.textContent = 'Erro: você colou a URL de teste (/dev). Use a URL de produção terminada em /exec.';
-        return;
-      }
-
-      box.className = 'p-3 rounded-xl text-xs border bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300';
-      box.textContent = 'Testando conexão com a Planilha Google...';
-
-      try {
-        const json = await fetchAppsScriptJson(`${rawUrl}?action=ping`);
-        if (json && json.ok) {
-          box.className = 'p-3 rounded-xl text-xs border bg-teal-50 dark:bg-teal-950/40 border-teal-200 dark:border-teal-800 text-teal-800 dark:text-teal-300';
-          box.textContent = `✅ Conectado com sucesso! Backend V${json.version || '3'} respondendo normalmente.`;
-          if (json.notice !== undefined) applyGlobalNotice(json.notice);
-        } else {
-          throw new Error(json.error || 'Resposta inesperada.');
-        }
-      } catch (err) {
-        box.className = 'p-3 rounded-xl text-xs border bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300';
-        if (err.message === 'PERMISSION_HTML') {
-          box.textContent = '❌ Erro de Permissão: o Google exigiu login. Reimplante o Apps Script e em "Quem pode acessar" marque exatamente "Qualquer pessoa".';
-        } else {
-          box.textContent = '❌ Não foi possível conectar. Verifique se a URL termina em /exec e se a implantação está publicada.';
-        }
-      }
-    }
-
-    // =========================================================================
-    // WORKSPACE RENDERING (PATIENT LIBRARY & PROTOCOLS)
+    // WORKSPACE RENDERING
     // =========================================================================
     function renderWorkspace() {
       if (!state.db) return;
+      document.getElementById('countActive').textContent = String(state.db.patients.filter(p => !p.archived).length);
+      document.getElementById('countArchived').textContent = String(state.db.patients.filter(p => p.archived).length);
+      document.getElementById('countProtocols').textContent = String(state.db.protocols.length);
 
-      const activeCount = state.db.patients.filter(p => !p.archived).length;
-      const archivedCount = state.db.patients.filter(p => p.archived).length;
-      const protoCount = state.db.protocols.length;
-
-      document.getElementById('countActive').textContent = String(activeCount);
-      document.getElementById('countArchived').textContent = String(archivedCount);
-      document.getElementById('countProtocols').textContent = String(protoCount);
-
-      // Update Tab styles
-      const activeCls = 'px-3 py-1 rounded-md font-semibold bg-white dark:bg-slate-800 text-teal-700 dark:text-teal-400 shadow-2xs transition';
-      const idleCls = 'px-3 py-1 rounded-md font-medium text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition';
+      const activeCls = 'px-2.5 sm:px-3 py-1 rounded-md font-semibold bg-white dark:bg-slate-800 text-teal-700 dark:text-teal-400 shadow-2xs transition';
+      const idleCls = 'px-2.5 sm:px-3 py-1 rounded-md font-medium text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition';
       document.getElementById('tabActivePatients').className = state.activeTab === 'active' ? activeCls : idleCls;
       document.getElementById('tabArchivedPatients').className = state.activeTab === 'archived' ? activeCls : idleCls;
       document.getElementById('tabProtocols').className = state.activeTab === 'protocols' ? activeCls : idleCls;
 
-      // Show/Hide sector filters
       document.getElementById('sectorFilterBar').classList.toggle('hidden', state.activeTab === 'protocols');
+      document.getElementById('btnCopyBatchWhatsApp').classList.toggle('hidden', state.activeTab === 'protocols');
 
       renderLibraryList();
       renderSelectedEditor();
     }
 
-    function getSectorAccent(sector) {
-      if (sector === 'vermelha') return { border: 'border-l-rose-600', dot: 'bg-rose-600', label: 'Vermelha' };
-      if (sector === 'amarela') return { border: 'border-l-amber-500', dot: 'bg-amber-500', label: 'Amarela' };
-      return { border: 'border-l-teal-600', dot: 'bg-teal-600', label: 'Enfermaria' };
+    function getFilteredPatients() {
+      const wantArchived = state.activeTab === 'archived';
+      const q = state.searchQuery.trim().toLowerCase();
+      return state.db.patients.filter(p => {
+        if (Boolean(p.archived) !== wantArchived) return false;
+        if (state.sectorFilter !== 'all' && p.sector !== state.sectorFilter) return false;
+        if (!q) return true;
+        return (p.bed + ' ' + p.name + ' ' + p.diagnosis + ' ' + p.notes).toLowerCase().includes(q);
+      });
     }
 
     function renderLibraryList() {
@@ -977,47 +1241,27 @@
       const q = state.searchQuery.trim().toLowerCase();
 
       if (state.activeTab === 'protocols') {
-        const items = state.db.protocols.filter(pr => {
-          if (!q) return true;
-          return (pr.title + ' ' + pr.category + ' ' + pr.content).toLowerCase().includes(q);
-        });
-
+        const items = state.db.protocols.filter(pr => !q || (pr.title + ' ' + pr.category + ' ' + pr.content).toLowerCase().includes(q));
         if (!items.length) {
           container.innerHTML = `<div class="text-xs text-slate-400 text-center py-8">Nenhuma conduta encontrada.</div>`;
           return;
         }
-
         items.forEach(pr => {
           const isSel = pr.id === state.selectedId;
           const btn = document.createElement('button');
           btn.type = 'button';
-          btn.className = `w-full text-left p-3 rounded-xl border transition ${
-            isSel
-              ? 'bg-teal-50/80 dark:bg-teal-950/50 border-teal-600/60'
-              : 'bg-slate-50/70 dark:bg-slate-900/60 border-slate-200/70 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
-          }`;
+          btn.className = `w-full text-left p-3 rounded-xl border transition ${isSel ? 'bg-teal-50/80 dark:bg-teal-950/50 border-teal-600/60' : 'bg-slate-50/70 dark:bg-slate-900/60 border-slate-200/70 dark:border-slate-800 hover:border-slate-300'}`;
           btn.innerHTML = `
             <div class="text-xs font-bold text-slate-800 dark:text-slate-100 truncate">${escapeHtml(pr.title || 'Sem título')}</div>
             <div class="text-[11px] text-slate-500 mt-0.5 truncate">${escapeHtml(pr.category || 'Geral')}</div>
           `;
-          btn.addEventListener('click', () => {
-            state.selectedId = pr.id;
-            renderWorkspace();
-          });
+          btn.addEventListener('click', () => { state.selectedId = pr.id; renderWorkspace(); });
           container.appendChild(btn);
         });
         return;
       }
 
-      // Active or Archived Patients
-      const wantArchived = state.activeTab === 'archived';
-      const patients = state.db.patients.filter(p => {
-        if (Boolean(p.archived) !== wantArchived) return false;
-        if (state.sectorFilter !== 'all' && p.sector !== state.sectorFilter) return false;
-        if (!q) return true;
-        return (p.bed + ' ' + p.name + ' ' + p.diagnosis + ' ' + p.notes).toLowerCase().includes(q);
-      });
-
+      const patients = getFilteredPatients();
       if (!patients.length) {
         container.innerHTML = `<div class="text-xs text-slate-400 text-center py-8">Nenhum paciente nesta lista.</div>`;
         return;
@@ -1025,33 +1269,67 @@
 
       patients.forEach(p => {
         const isSel = p.id === state.selectedId;
-        const acc = getSectorAccent(p.sector);
+        const border = p.sector === 'vermelha' ? 'border-l-rose-600' : p.sector === 'amarela' ? 'border-l-amber-500' : 'border-l-teal-600';
         const days = calcDaysFromIso(p.admissionDate);
+        const pendCount = countInlinePendings(p.notes);
 
         const btn = document.createElement('button');
         btn.type = 'button';
-        btn.className = `w-full text-left p-3 rounded-xl border border-l-4 ${acc.border} transition ${
-          isSel
-            ? 'bg-teal-50/70 dark:bg-teal-950/40 border-teal-600/50'
-            : 'bg-slate-50/70 dark:bg-slate-900/60 border-slate-200/70 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
-        }`;
+        btn.className = `w-full text-left p-3 rounded-xl border border-l-4 ${border} transition ${isSel ? 'bg-teal-50/70 dark:bg-teal-950/40 border-teal-600/50' : 'bg-slate-50/70 dark:bg-slate-900/60 border-slate-200/70 dark:border-slate-800 hover:border-slate-300'}`;
         btn.innerHTML = `
           <div class="flex items-center justify-between gap-2">
             <span class="blur-sensitive text-xs font-bold text-slate-900 dark:text-slate-100 truncate">
               ${p.bed ? `<span class="mono text-teal-700 dark:text-teal-400 mr-1">${escapeHtml(p.bed)}</span>` : ''}${escapeHtml(p.name || 'Sem nome')}
             </span>
-            ${days !== null ? `<span class="mono text-[10px] font-semibold px-1.5 py-0.5 rounded bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700 shrink-0">D${days}</span>` : ''}
+            <div class="flex items-center gap-1 shrink-0">
+              ${pendCount > 0 ? `<span class="mono text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-700 dark:text-amber-300">${pendCount} pend.</span>` : ''}
+              ${days !== null ? `<span class="mono text-[10px] font-semibold px-1.5 py-0.5 rounded bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700">D${days}</span>` : ''}
+            </div>
           </div>
-          <div class="blur-sensitive text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
-            ${escapeHtml(p.diagnosis || 'Sem hipótese registrada')}
-          </div>
+          <div class="blur-sensitive text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">${escapeHtml(p.diagnosis || 'Sem hipótese registrada')}</div>
           ${p.allergy ? `<div class="mt-1 inline-block text-[10px] font-bold px-1.5 py-0.2 rounded bg-rose-500/15 text-rose-600 dark:text-rose-400">Alergia: ${escapeHtml(p.allergy)}</div>` : ''}
         `;
-        btn.addEventListener('click', () => {
-          state.selectedId = p.id;
-          renderWorkspace();
-        });
+        btn.addEventListener('click', () => { state.selectedId = p.id; renderWorkspace(); });
         container.appendChild(btn);
+      });
+    }
+
+    function renderExamSystemsUI(pat) {
+      const grid = document.getElementById('examSystemsGrid');
+      grid.innerHTML = '';
+      EXAM_SYSTEMS.forEach(sys => {
+        const sysState = pat.exam.systems[sys.key] || { status: 'normal', text: '' };
+        const isNormal = sysState.status === 'normal';
+
+        const box = document.createElement('div');
+        box.className = 'p-2 rounded-lg bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-1.5';
+        box.innerHTML = `
+          <div class="flex items-center justify-between gap-2">
+            <span class="font-semibold text-slate-700 dark:text-slate-200">${sys.label}</span>
+            <div class="flex rounded-md overflow-hidden border border-slate-200 dark:border-slate-800 text-[10px]">
+              <button type="button" class="sys-norm-btn px-2 py-0.5 font-semibold ${isNormal ? 'bg-teal-700 text-white' : 'bg-slate-50 dark:bg-slate-900 text-slate-500'}">Normal</button>
+              <button type="button" class="sys-alt-btn px-2 py-0.5 font-semibold ${!isNormal ? 'bg-amber-600 text-white' : 'bg-slate-50 dark:bg-slate-900 text-slate-500'}">Alterado</button>
+            </div>
+          </div>
+          <input type="text" value="${escapeHtml(sysState.text || '')}" placeholder="Descreva a alteração em ${sys.label}..." class="sys-alt-input ${isNormal ? 'hidden' : ''} w-full px-2 py-1 text-[11px] mono rounded bg-slate-50 dark:bg-slate-900 border border-amber-300 dark:border-amber-800 focus:outline-none" />
+        `;
+
+        box.querySelector('.sys-norm-btn').addEventListener('click', () => {
+          pat.exam.systems[sys.key].status = 'normal';
+          renderExamSystemsUI(pat);
+          scheduleAutoSave();
+        });
+        box.querySelector('.sys-alt-btn').addEventListener('click', () => {
+          pat.exam.systems[sys.key].status = 'altered';
+          renderExamSystemsUI(pat);
+          scheduleAutoSave();
+        });
+        box.querySelector('.sys-alt-input').addEventListener('input', e => {
+          pat.exam.systems[sys.key].text = e.target.value;
+          scheduleAutoSave();
+        });
+
+        grid.appendChild(box);
       });
     }
 
@@ -1063,11 +1341,7 @@
       if (state.activeTab === 'protocols') {
         patCard.classList.add('hidden');
         const proto = state.db.protocols.find(x => x.id === state.selectedId);
-        if (!proto) {
-          protoCard.classList.add('hidden');
-          emptyEl.classList.remove('hidden');
-          return;
-        }
+        if (!proto) { protoCard.classList.add('hidden'); emptyEl.classList.remove('hidden'); return; }
         emptyEl.classList.add('hidden');
         protoCard.classList.remove('hidden');
         document.getElementById('protoTitle').value = proto.title || '';
@@ -1079,12 +1353,9 @@
       protoCard.classList.add('hidden');
       const wantArchived = state.activeTab === 'archived';
       const pat = state.db.patients.find(p => p.id === state.selectedId && Boolean(p.archived) === wantArchived);
-      if (!pat) {
-        patCard.classList.add('hidden');
-        emptyEl.classList.remove('hidden');
-        return;
-      }
+      if (!pat) { patCard.classList.add('hidden'); emptyEl.classList.remove('hidden'); return; }
 
+      ensurePatientStructure(pat);
       emptyEl.classList.add('hidden');
       patCard.classList.remove('hidden');
 
@@ -1100,14 +1371,35 @@
 
       const days = calcDaysFromIso(pat.admissionDate);
       const badge = document.getElementById('pDaysBadge');
-      if (days !== null) {
-        badge.textContent = `D${days}`;
-        badge.classList.remove('hidden');
-      } else {
-        badge.classList.add('hidden');
-      }
+      if (days !== null) { badge.textContent = `D${days}`; badge.classList.remove('hidden'); }
+      else { badge.classList.add('hidden'); }
 
       document.getElementById('btnToggleArchive').textContent = pat.archived ? 'Reativar' : 'Alta';
+
+      // Populate SSVV & Exam
+      document.getElementById('efPa').value = pat.exam.pa || '';
+      document.getElementById('efFc').value = pat.exam.fc || '';
+      document.getElementById('efFr').value = pat.exam.fr || '';
+      document.getElementById('efSpo2').value = pat.exam.spo2 || '';
+      document.getElementById('efTax').value = pat.exam.tax || '';
+      document.getElementById('efHgt').value = pat.exam.hgt || '';
+      renderExamSystemsUI(pat);
+
+      // Populate Exames Complementares
+      document.getElementById('labDate').value = pat.labs.date || new Date().toISOString().slice(0, 10);
+      document.getElementById('labHb').value = pat.labs.hb || '';
+      document.getElementById('labHt').value = pat.labs.ht || '';
+      document.getElementById('labLeuco').value = pat.labs.leuco || '';
+      document.getElementById('labBands').value = pat.labs.bands ?? '';
+      document.getElementById('labPlaq').value = pat.labs.plaq || '';
+      document.getElementById('labUr').value = pat.labs.ur || '';
+      document.getElementById('labCr').value = pat.labs.cr || '';
+      document.getElementById('labNa').value = pat.labs.na || '';
+      document.getElementById('labK').value = pat.labs.k || '';
+      document.getElementById('labPcr').value = pat.labs.pcr || '';
+      document.getElementById('labOthers').value = pat.labs.others || '';
+      document.getElementById('labImaging').value = pat.labs.imaging || '';
+      document.getElementById('labsLivePreview').textContent = buildLabsText(pat.labs) || 'Preencha os campos acima para visualizar a linha formatada.';
     }
 
     function getSelectedPatient() {
@@ -1120,32 +1412,11 @@
       return state.db.protocols.find(p => p.id === state.selectedId) || null;
     }
 
-    function formatPatientForPep(p) {
-      const days = calcDaysFromIso(p.admissionDate);
-      const diFormatted = p.admissionDate ? p.admissionDate.split('-').reverse().join('/') : '';
-      const headerParts = [
-        p.bed ? `LEITO ${p.bed}` : '',
-        p.name || '',
-        p.age || ''
-      ].filter(Boolean).join(' - ');
-
-      const metaParts = [
-        diFormatted ? `DI: ${diFormatted}${days !== null ? ` (D${days})` : ''}` : '',
-        p.diagnosis ? `HD: ${p.diagnosis}` : '',
-        p.allergy ? `ALERGIA: ${p.allergy}` : ''
-      ].filter(Boolean).join(' | ');
-
-      return [headerParts, metaParts, p.notes || ''].filter(Boolean).join('\n');
-    }
-
     function insertTextInActiveTextarea(textToInsert) {
       const pat = getSelectedPatient();
       const proto = getSelectedProtocol();
       const el = pat ? document.getElementById('pNotes') : proto ? document.getElementById('protoContent') : null;
-      if (!el) {
-        showToast('Selecione um paciente ou conduta primeiro.');
-        return;
-      }
+      if (!el) { showToast('Selecione um paciente ou conduta.'); return; }
 
       const start = el.selectionStart ?? el.value.length;
       const end = el.selectionEnd ?? el.value.length;
@@ -1157,6 +1428,7 @@
       if (pat) {
         pat.notes = el.value;
         document.getElementById('pCharCount').textContent = `${pat.notes.length} chars`;
+        renderLibraryList();
       } else if (proto) {
         proto.content = el.value;
       }
@@ -1164,100 +1436,9 @@
     }
 
     // =========================================================================
-    // ADMIN PANEL FUNCTIONS (KAIO SPECIAL POWERS)
+    // CALCULATORS (ADULT & PEDIATRICS) + SMART PASTE
     // =========================================================================
-    async function loadAdminDashboard() {
-      if (!state.apiUrl) {
-        const errEl = document.getElementById('adminAuthError');
-        errEl.textContent = 'Configure e salve primeiro a URL do Apps Script na aba Nuvem.';
-        errEl.classList.remove('hidden');
-        return;
-      }
-
-      const errEl = document.getElementById('adminAuthError');
-      errEl.classList.add('hidden');
-
-      try {
-        const url = `${state.apiUrl}?action=admin_list&adminKey=${encodeURIComponent(state.adminKey)}`;
-        const json = await fetchAppsScriptJson(url);
-        if (!json.ok) {
-          errEl.textContent = json.error || 'Chave de administrador inválida.';
-          errEl.classList.remove('hidden');
-          return;
-        }
-
-        document.getElementById('adminLoginForm').classList.add('hidden');
-        document.getElementById('adminDashboard').classList.remove('hidden');
-
-        const users = json.users || [];
-        const totalPatients = users.reduce((acc, u) => acc + (u.patientsCount || 0), 0);
-        document.getElementById('adminStatUsers').textContent = String(users.length);
-        document.getElementById('adminStatPatients').textContent = String(totalPatients);
-        document.getElementById('adminNoticeInput').value = json.notice || '';
-
-        const listEl = document.getElementById('adminUsersList');
-        listEl.innerHTML = '';
-
-        if (!users.length) {
-          listEl.innerHTML = `<div class="text-xs text-slate-400 text-center py-4">Nenhum caderno salvo na nuvem ainda.</div>`;
-          return;
-        }
-
-        users.forEach(u => {
-          const row = document.createElement('div');
-          row.className = 'p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2 text-xs';
-          const dateStr = u.updatedAt ? new Date(u.updatedAt).toLocaleString('pt-BR') : '—';
-          row.innerHTML = `
-            <div class="min-w-0">
-              <div class="mono font-bold text-teal-700 dark:text-teal-400 truncate">/${escapeHtml(u.user)}</div>
-              <div class="text-[11px] text-slate-500">${u.patientsCount} pcts • ${dateStr}</div>
-            </div>
-            <div class="flex items-center gap-1.5 shrink-0">
-              <button type="button" class="admin-open-btn px-2 py-1 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-teal-600 text-[11px] font-medium">Abrir</button>
-              <button type="button" class="admin-del-btn px-2 py-1 rounded-lg bg-rose-50 dark:bg-rose-950/50 text-rose-600 hover:bg-rose-600 hover:text-white text-[11px] font-medium">Excluir</button>
-            </div>
-          `;
-          row.querySelector('.admin-open-btn').addEventListener('click', () => {
-            closeAllModals();
-            openNotebook(u.user);
-          });
-          row.querySelector('.admin-del-btn').addEventListener('click', () => {
-            askConfirm(`Excluir permanentemente o caderno /${u.user} da planilha?`, async () => {
-              try {
-                const delRes = await fetchAppsScriptJson(state.apiUrl, {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                  body: JSON.stringify({
-                    action: 'admin_delete',
-                    adminKey: state.adminKey,
-                    targetUser: u.user
-                  })
-                });
-                if (delRes.ok) {
-                  showToast(`Caderno /${u.user} excluído.`);
-                  loadAdminDashboard();
-                } else {
-                  showToast(delRes.error || 'Erro ao excluir.');
-                }
-              } catch (e) {
-                showToast('Falha na comunicação com a nuvem.');
-              }
-            });
-          });
-          listEl.appendChild(row);
-        });
-      } catch (e) {
-        errEl.textContent = e.message === 'PERMISSION_HTML'
-          ? 'Erro de permissão no Apps Script (configure para "Qualquer pessoa").'
-          : 'Erro ao conectar ao servidor.';
-        errEl.classList.remove('hidden');
-      }
-    }
-
-    // =========================================================================
-    // CALCULATORS & LAB COMPACTOR
-    // =========================================================================
-    function updateCalculators() {
+    function updateAdultCalculators() {
       const age = parseFloat(document.getElementById('cgAge').value);
       const wt = parseFloat(document.getElementById('cgWeight').value);
       const cr = parseFloat(document.getElementById('cgCr').value);
@@ -1266,28 +1447,16 @@
         let cl = ((140 - age) * wt) / (72 * cr);
         if (sex === 'F') cl *= 0.85;
         document.getElementById('cgOut').textContent = `ClCr: ${cl.toFixed(1)} mL/min`;
-      } else {
-        document.getElementById('cgOut').textContent = 'Preencha idade, peso e Cr.';
-      }
+      } else document.getElementById('cgOut').textContent = 'Preencha idade, peso e Cr.';
 
       const na = parseFloat(document.getElementById('naVal').value);
       const gl = parseFloat(document.getElementById('naGluc').value) || 0;
-      if (na > 0) {
-        const naC = na + 0.016 * Math.max(0, gl - 100);
-        document.getElementById('naOut').textContent = `Na corrigido: ${naC.toFixed(1)} mEq/L`;
-      } else {
-        document.getElementById('naOut').textContent = 'Informe Na medido.';
-      }
+      document.getElementById('naOut').textContent = na > 0 ? `Na corrigido: ${(na + 0.016 * Math.max(0, gl - 100)).toFixed(1)} mEq/L` : 'Informe Na.';
 
       const conc = parseFloat(document.getElementById('vasoConc').value);
       const vWt = parseFloat(document.getElementById('vasoWt').value);
       const vMl = parseFloat(document.getElementById('vasoMl').value);
-      if (vWt > 0 && vMl >= 0) {
-        const dose = (vMl * conc) / 60 / vWt;
-        document.getElementById('vasoOut').textContent = `Dose: ${dose.toFixed(2)} mcg/kg/min (${vMl} mL/h)`;
-      } else {
-        document.getElementById('vasoOut').textContent = 'Informe peso e vazão.';
-      }
+      document.getElementById('vasoOut').textContent = (vWt > 0 && vMl >= 0) ? `Dose: ${((vMl * conc) / 60 / vWt).toFixed(2)} mcg/kg/min (${vMl} mL/h)` : 'Informe peso e vazão.';
 
       const bw = parseFloat(document.getElementById('bmiW').value);
       const bh = parseFloat(document.getElementById('bmiH').value);
@@ -1295,89 +1464,230 @@
       if (bw > 0 && bh > 40) {
         const bmi = bw / ((bh / 100) ** 2);
         const pbw = (bs === 'M' ? 50 : 45.5) + 0.91 * (bh - 152.4);
-        const vt = Math.max(150, Math.round(pbw * 6));
-        document.getElementById('bmiOut').textContent = `IMC: ${bmi.toFixed(1)} | PP: ${pbw.toFixed(1)}kg (VC 6mL/kg: ${vt} mL)`;
-      } else {
-        document.getElementById('bmiOut').textContent = 'Informe peso e altura.';
+        document.getElementById('bmiOut').textContent = `IMC: ${bmi.toFixed(1)} | PP: ${pbw.toFixed(1)}kg (VC 6mL/kg: ${Math.max(150, Math.round(pbw * 6))} mL)`;
+      } else document.getElementById('bmiOut').textContent = 'Informe peso e altura.';
+    }
+
+    function updatePediatricCalculator() {
+      const w = parseFloat(document.getElementById('pedsWeightInput').value);
+      const list = document.getElementById('pedsDosesList');
+      list.innerHTML = '';
+      if (!w || w <= 0) {
+        list.innerHTML = `<div class="text-slate-400">Informe o peso em kg.</div>`;
+        return;
+      }
+
+      const meds = [
+        { name: 'Dipirona Gotas (500 mg/mL)', dose: `${Math.min(40, Math.round(w * 0.8))} a ${Math.min(40, Math.round(w))} gotas VO 6/6h` },
+        { name: 'Dipirona Sol. Oral (50 mg/mL)', dose: `${Math.min(20, (w * 0.4)).toFixed(1)} mL VO 6/6h (20 mg/kg)` },
+        { name: 'Paracetamol Gotas (200 mg/mL)', dose: `${Math.min(50, Math.round(w))} gotas VO 6/6h (15 mg/kg)` },
+        { name: 'Ibuprofeno Gotas (100 mg/mL)', dose: `${Math.min(40, Math.round(w))} gotas VO 8/8h (10 mg/kg)` },
+        { name: 'Amoxicilina 250 mg/5mL (50 mg/kg/d)', dose: `${((w * 50) / 3 / 50).toFixed(1)} mL VO 8/8h` },
+        { name: 'Amoxi+Clav 400 mg/5mL (50 mg/kg/d)', dose: `${((w * 50) / 2 / 80).toFixed(1)} mL VO 12/12h` },
+        { name: 'Azitromicina 200 mg/5mL (10 mg/kg/d)', dose: `${Math.min(12.5, (w * 10) / 40).toFixed(1)} mL VO 1x/dia` },
+        { name: 'Prednisolona 3 mg/mL (1 mg/kg/d)', dose: `${Math.min(20, (w * 1) / 3).toFixed(1)} mL VO 1x/dia` },
+        { name: 'Ondansetrona EV (0,15 mg/kg)', dose: `${Math.min(4, w * 0.15).toFixed(1)} mg (${Math.min(2, (w * 0.15) / 2).toFixed(2)} mL) EV` }
+      ];
+
+      meds.forEach(m => {
+        const row = document.createElement('div');
+        row.className = 'p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2';
+        row.innerHTML = `
+          <div>
+            <div class="font-bold text-slate-800 dark:text-slate-100">${m.name}</div>
+            <div class="mono text-teal-700 dark:text-teal-400">${m.dose}</div>
+          </div>
+          <button type="button" class="px-2 py-1 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-[11px] font-semibold hover:border-teal-600 shrink-0">Inserir</button>
+        `;
+        row.querySelector('button').addEventListener('click', () => {
+          insertTextInActiveTextarea(`- ${m.name}: ${m.dose}\n`);
+          closeAllModals();
+        });
+        list.appendChild(row);
+      });
+    }
+
+    function runSmartPaste() {
+      const raw = document.getElementById('smartPasteInput').value.trim();
+      if (!raw) return;
+
+      const bedMatch = raw.match(/\b(?:leito|l)\s*[:#-]?\s*([a-z0-9]+)/i);
+      const ageMatch = raw.match(/\b(\d{1,3})\s*(?:anos|a\b)/i);
+      const hdMatch = raw.match(/\b(?:hd|hp|hip[oó]tese|diagn[oó]stico)\s*[:=-]\s*([^\n|]+)/i);
+      const upper = raw.toUpperCase();
+      const sector = /VERMELHA|CHOQUE|INTUBAD|TOT/.test(upper) ? 'vermelha' : /AMARELA|OBSERV/.test(upper) ? 'amarela' : 'enfermaria';
+
+      const firstLine = raw.split('\n')[0].replace(/sala\s*(vermelha|amarela)/ig, '').replace(/leito\s*\w+/ig, '').replace(/[-,|]/g, ' ').trim();
+      const newPat = {
+        id: 'pat_' + Date.now(),
+        bed: bedMatch ? bedMatch[1].toUpperCase() : '',
+        name: firstLine.slice(0, 35) || 'Novo Paciente',
+        age: ageMatch ? ageMatch[1] + 'a' : '',
+        sector: sector,
+        admissionDate: new Date().toISOString().slice(0, 10),
+        diagnosis: hdMatch ? hdMatch[1].trim() : '',
+        allergy: '',
+        archived: false,
+        exam: createDefaultExamState(),
+        labs: createDefaultLabsState(),
+        notes: raw
+      };
+
+      state.activeTab = 'active';
+      state.db.patients.unshift(newPat);
+      state.selectedId = newPat.id;
+      document.getElementById('smartPasteInput').value = '';
+      scheduleAutoSave();
+      renderWorkspace();
+      closeAllModals();
+      showToast('Paciente criado via Smart Paste!');
+    }
+
+    // =========================================================================
+    // ADMIN PANEL FUNCTIONS
+    // =========================================================================
+    async function loadAdminDashboard() {
+      const errEl = document.getElementById('adminAuthError');
+      errEl.classList.add('hidden');
+      if (!state.apiUrl) {
+        errEl.textContent = 'Salve primeiro a URL do Apps Script na aba Nuvem.';
+        errEl.classList.remove('hidden');
+        return;
+      }
+      try {
+        const json = await fetchAppsScriptJson(`${state.apiUrl}?action=admin_list&adminKey=${encodeURIComponent(state.adminKey)}`);
+        if (!json.ok) {
+          errEl.textContent = json.error || 'Chave de administrador inválida.';
+          errEl.classList.remove('hidden');
+          return;
+        }
+        document.getElementById('adminLoginForm').classList.add('hidden');
+        document.getElementById('adminDashboard').classList.remove('hidden');
+
+        const users = json.users || [];
+        document.getElementById('adminStatUsers').textContent = String(users.length);
+        document.getElementById('adminStatPatients').textContent = String(users.reduce((a, u) => a + (u.patientsCount || 0), 0));
+        document.getElementById('adminNoticeInput').value = json.notice || '';
+        const defProtos = Array.isArray(json.defaultProtocols) ? json.defaultProtocols : [];
+        document.getElementById('adminDefaultProtoStatus').textContent = `${defProtos.length} conduta(s) padrão salva(s) para novos usuários.`;
+
+        const listEl = document.getElementById('adminUsersList');
+        listEl.innerHTML = '';
+        if (!users.length) {
+          listEl.innerHTML = `<div class="text-xs text-slate-400 text-center py-4">Nenhum caderno salvo na nuvem.</div>`;
+          return;
+        }
+        users.forEach(u => {
+          const row = document.createElement('div');
+          row.className = 'p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2 text-xs';
+          const dateStr = u.updatedAt ? new Date(u.updatedAt).toLocaleString('pt-BR') : '—';
+          row.innerHTML = `
+            <div class="min-w-0">
+              <div class="mono font-bold text-teal-700 dark:text-teal-400 truncate">/${escapeHtml(u.user)} ${u.hasPin ? '🔒' : ''}</div>
+              <div class="text-[11px] text-slate-500">${u.patientsCount} pcts • ${dateStr}</div>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0">
+              <button type="button" class="admin-open-btn px-2 py-1 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-teal-600 text-[11px] font-medium">Abrir</button>
+              <button type="button" class="admin-del-btn px-2 py-1 rounded-lg bg-rose-50 dark:bg-rose-950/50 text-rose-600 hover:bg-rose-600 hover:text-white text-[11px] font-medium">Excluir</button>
+            </div>
+          `;
+          row.querySelector('.admin-open-btn').addEventListener('click', () => { closeAllModals(); openNotebook(u.user); });
+          row.querySelector('.admin-del-btn').addEventListener('click', () => {
+            askConfirm(`Excluir permanentemente /${u.user} da planilha?`, async () => {
+              const delRes = await fetchAppsScriptJson(state.apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({ action: 'admin_delete', adminKey: state.adminKey, targetUser: u.user })
+              });
+              if (delRes.ok) { showToast(`Caderno /${u.user} excluído.`); loadAdminDashboard(); }
+            });
+          });
+          listEl.appendChild(row);
+        });
+      } catch (e) {
+        errEl.textContent = e.message === 'PERMISSION_HTML' ? 'Erro de permissão no Apps Script (use "Qualquer pessoa").' : 'Erro ao conectar.';
+        errEl.classList.remove('hidden');
       }
     }
 
-    function buildCompactLabLine() {
-      const raw = document.getElementById('labRawInput').value.trim();
-      const today = new Date().toLocaleDateString('pt-BR').slice(0, 5);
-      if (!raw) {
-        document.getElementById('labCompactPreview').textContent = `#LABS (${today}): `;
-        return;
-      }
-      const rules = [
-        ['Hb', /(?:hemoglobina|\bhb\b)\s*[:=-]?\s*([\d.,]+)/i],
-        ['Ht', /(?:hemat[oó]crito|\bht\b)\s*[:=-]?\s*([\d.,]+%?)/i],
-        ['Leuco', /(?:leuc[oó]citos|\bleuco\b)\s*[:=-]?\s*([\d.,]+)/i],
-        ['Plaq', /(?:plaquetas|\bplaq\b)\s*[:=-]?\s*([\d.,]+k?)/i],
-        ['PCR', /(?:prote[ií]na c reativa|\bpcr\b)\s*[:=-]?\s*([\d.,]+)/i],
-        ['Cr', /(?:creatinina|\bcr\b)\s*[:=-]?\s*([\d.,]+)/i],
-        ['Ur', /(?:ureia|\bur\b)\s*[:=-]?\s*([\d.,]+)/i],
-        ['Na', /(?:s[oó]dio|\bna\b)\s*[:=-]?\s*([\d.,]+)/i],
-        ['K', /(?:pot[aá]ssio|\bk\b)\s*[:=-]?\s*([\d.,]+)/i]
-      ];
-      const extracted = [];
-      rules.forEach(([label, re]) => {
-        const m = raw.match(re);
-        if (m && m[1]) extracted.push(`${label} ${m[1].replace(',', '.')}`);
-      });
-      const result = extracted.length ? extracted.join(' | ') : raw.replace(/\s*\n\s*/g, ' | ');
-      document.getElementById('labCompactPreview').textContent = `#LABS (${today}): ${result}`;
+    function copyBatchForWhatsApp() {
+      const list = state.activeTab === 'protocols' ? state.db.patients.filter(p => !p.archived) : getFilteredPatients();
+      if (!list.length) { showToast('Nenhum paciente na lista para copiar.'); return; }
+      const header = `*PASSAGEM DE PLANTÃO — /${state.slug.toUpperCase()} (${new Date().toLocaleDateString('pt-BR')})*`;
+      const body = list.map(p => formatPatientForPep(p, true)).join('\n\n────────────────\n\n');
+      copyText(`${header}\n\n${body}`, `${list.length} paciente(s) copiado(s) para o WhatsApp!`);
     }
 
     function closeAllModals() {
-      ['toolsDrawer', 'settingsModal', 'confirmModal'].forEach(id => {
-        document.getElementById(id).classList.add('hidden');
-      });
+      ['toolsDrawer', 'settingsModal', 'confirmModal'].forEach(id => document.getElementById(id).classList.add('hidden'));
     }
 
     // =========================================================================
-    // BOOTSTRAP & EVENT LISTENERS
+    // BOOTSTRAP & LISTENERS
     // =========================================================================
     window.addEventListener('DOMContentLoaded', () => {
-      // Theme Init (Clinical Light Default)
-      if (safeGet(THEME_KEY, 'light') === 'dark') {
-        document.documentElement.classList.add('dark');
-      }
+      if (safeGet(THEME_KEY, 'light') === 'dark') document.documentElement.classList.add('dark');
 
-      // API URL Init
       state.apiUrl = getActiveApiUrl();
       document.getElementById('cloudUrlInput').value = state.apiUrl;
 
-      // Ping global notice if API is already configured
+      // Offline Queue Listener
+      window.addEventListener('online', flushOfflineQueue);
+
       if (state.apiUrl) {
         fetchAppsScriptJson(`${state.apiUrl}?action=ping`)
-          .then(j => { if (j && j.notice) applyGlobalNotice(j.notice); })
-          .catch(() => {});
+          .then(j => {
+            if (j && j.notice) applyGlobalNotice(j.notice);
+            if (j && Array.isArray(j.defaultProtocols)) state.remoteDefaultProtocols = j.defaultProtocols;
+          }).catch(() => {});
       }
 
-      // Check URL Hash (#/slug) -> Open directly if provided, else show Landing Portal
       const initialHash = sanitizeSlug(window.location.hash.replace(/^#\/?/, ''));
-      if (initialHash) {
-        openNotebook(initialHash);
-      } else {
-        showLandingScreen();
-      }
+      if (initialHash) openNotebook(initialHash);
+      else showLandingScreen();
 
       window.addEventListener('hashchange', () => {
         const nextSlug = sanitizeSlug(window.location.hash.replace(/^#\/?/, ''));
-        if (nextSlug && nextSlug !== state.slug) {
-          openNotebook(nextSlug);
-        } else if (!nextSlug && state.slug) {
-          showLandingScreen();
-        }
+        if (nextSlug && nextSlug !== state.slug) openNotebook(nextSlug);
+        else if (!nextSlug && state.slug) showLandingScreen();
       });
 
-      // Landing Form
       document.getElementById('landingForm').addEventListener('submit', e => {
         e.preventDefault();
-        const val = document.getElementById('landingSlugInput').value;
-        openNotebook(val);
+        openNotebook(document.getElementById('landingSlugInput').value);
       });
+
+      // PIN Unlock Form
+      document.getElementById('pinUnlockForm').addEventListener('submit', async e => {
+        e.preventDefault();
+        const entered = document.getElementById('pinUnlockInput').value.trim();
+        if (!entered) return;
+        const hashed = await hashPin(state.slug, entered);
+        state.currentPinHash = hashed;
+        const url = `${state.apiUrl}?action=load&user=${encodeURIComponent(state.slug)}&pinHash=${encodeURIComponent(hashed)}&adminKey=${encodeURIComponent(entered)}`;
+        try {
+          const json = await fetchAppsScriptJson(url);
+          if (json.ok && !json.locked) {
+            safeSet(PIN_CACHE_PREFIX + state.slug, hashed);
+            if (json.data && Array.isArray(json.data.patients)) {
+              state.db = json.data;
+              state.db.patients = state.db.patients.map(ensurePatientStructure);
+              safeSet(STORAGE_PREFIX + state.slug, state.db);
+            }
+            const firstActive = state.db.patients.find(p => !p.archived);
+            state.selectedId = firstActive ? firstActive.id : null;
+            document.getElementById('pinLockScreen').classList.add('hidden');
+            document.getElementById('workspaceScreen').classList.remove('hidden');
+            renderWorkspace();
+            setSyncStatus('cloud');
+          } else {
+            document.getElementById('pinUnlockError').classList.remove('hidden');
+          }
+        } catch (err) {
+          document.getElementById('pinUnlockError').classList.remove('hidden');
+        }
+      });
+      document.getElementById('btnPinBackToLanding').addEventListener('click', showLandingScreen);
 
       function toggleTheme() {
         const isDark = document.documentElement.classList.toggle('dark');
@@ -1386,21 +1696,19 @@
       document.getElementById('btnTheme').addEventListener('click', toggleTheme);
       document.getElementById('btnLandingTheme').addEventListener('click', toggleTheme);
 
-      // Header Actions
       document.getElementById('btnBackToLanding').addEventListener('click', showLandingScreen);
       document.getElementById('btnCopyDirectLink').addEventListener('click', () => {
-        const url = `${window.location.origin}${window.location.pathname}#/${state.slug}`;
-        copyText(url, `Link copiado: #/${state.slug}`);
+        copyText(`${window.location.origin}${window.location.pathname}#/${state.slug}`, `Link copiado: #/${state.slug}`);
       });
 
       function togglePrivacy() {
         state.privacy = !state.privacy;
         document.body.classList.toggle('privacy-blur', state.privacy);
-        showToast(state.privacy ? 'Privacidade ativada (dados borrados)' : 'Privacidade desativada');
+        showToast(state.privacy ? 'Privacidade ativada' : 'Privacidade desativada');
       }
       document.getElementById('btnPrivacy').addEventListener('click', togglePrivacy);
 
-      // Tabs Navigation
+      // Tabs
       document.getElementById('tabActivePatients').addEventListener('click', () => {
         state.activeTab = 'active';
         const first = state.db.patients.find(p => !p.archived);
@@ -1419,13 +1727,11 @@
         renderWorkspace();
       });
 
-      // Sector Filter Pills
       document.querySelectorAll('.sector-pill').forEach(btn => {
         btn.addEventListener('click', () => {
           state.sectorFilter = btn.getAttribute('data-sector');
           document.querySelectorAll('.sector-pill').forEach(b => {
-            const active = b === btn;
-            b.className = active
+            b.className = b === btn
               ? 'sector-pill px-2.5 py-1 rounded-md font-semibold bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 shrink-0'
               : 'sector-pill px-2.5 py-1 rounded-md font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 shrink-0';
           });
@@ -1433,45 +1739,44 @@
         });
       });
 
-      // Search Input
       document.getElementById('librarySearch').addEventListener('input', e => {
         state.searchQuery = e.target.value;
         renderLibraryList();
       });
 
-      // + New Patient or Protocol
+      document.getElementById('btnCopyBatchWhatsApp').addEventListener('click', copyBatchForWhatsApp);
+      document.getElementById('btnExportZapDrawer').addEventListener('click', () => { copyBatchForWhatsApp(); closeAllModals(); });
+
       document.getElementById('btnNewItem').addEventListener('click', () => {
         if (state.activeTab === 'protocols') {
-          const newProto = { id: 'pro_' + Date.now(), title: 'Nova Conduta', category: 'Clínica', content: '' };
-          state.db.protocols.unshift(newProto);
-          state.selectedId = newProto.id;
+          const pr = { id: 'pro_' + Date.now(), title: 'Nova Conduta', category: 'Clínica', content: '' };
+          state.db.protocols.unshift(pr);
+          state.selectedId = pr.id;
           scheduleAutoSave();
           renderWorkspace();
           document.getElementById('protoTitle').focus();
           return;
         }
         state.activeTab = 'active';
-        const newPat = {
+        const pat = {
           id: 'pat_' + Date.now(),
-          bed: '',
-          name: '',
-          age: '',
+          bed: '', name: '', age: '',
           sector: state.sectorFilter === 'all' ? 'enfermaria' : state.sectorFilter,
           admissionDate: new Date().toISOString().slice(0, 10),
-          diagnosis: '',
-          allergy: '',
-          archived: false,
+          diagnosis: '', allergy: '', archived: false,
+          exam: createDefaultExamState(),
+          labs: createDefaultLabsState(),
           notes: ''
         };
-        state.db.patients.unshift(newPat);
-        state.selectedId = newPat.id;
+        state.db.patients.unshift(pat);
+        state.selectedId = pat.id;
         scheduleAutoSave();
         renderWorkspace();
         document.getElementById('pBed').focus();
       });
 
-      // Patient Field Bindings
-      const bindPatField = (elId, key, reRenderList = true) => {
+      // Patient Header Fields
+      const bindPat = (elId, key, reList = true) => {
         document.getElementById(elId).addEventListener('input', e => {
           const p = getSelectedPatient();
           if (!p) return;
@@ -1480,62 +1785,121 @@
             const d = calcDaysFromIso(p.admissionDate);
             const b = document.getElementById('pDaysBadge');
             if (d !== null) { b.textContent = `D${d}`; b.classList.remove('hidden'); }
-            else { b.classList.add('hidden'); }
+            else b.classList.add('hidden');
           }
-          if (reRenderList) renderLibraryList();
+          if (reList) renderLibraryList();
           scheduleAutoSave();
         });
       };
-      bindPatField('pBed', 'bed');
-      bindPatField('pName', 'name');
-      bindPatField('pAge', 'age', false);
-      bindPatField('pSector', 'sector');
-      bindPatField('pAdmissionDate', 'admissionDate');
-      bindPatField('pDiagnosis', 'diagnosis');
-      bindPatField('pAllergy', 'allergy');
+      bindPat('pBed', 'bed');
+      bindPat('pName', 'name');
+      bindPat('pAge', 'age', false);
+      bindPat('pSector', 'sector');
+      bindPat('pAdmissionDate', 'admissionDate');
+      bindPat('pDiagnosis', 'diagnosis');
+      bindPat('pAllergy', 'allergy');
 
-      // Patient Notes + Slash Commands Auto-Expansion
+      // Collapsible Panels Toggles (Exam & Labs)
+      document.getElementById('btnToggleExamPanel').addEventListener('click', () => {
+        state.examPanelOpen = !state.examPanelOpen;
+        document.getElementById('examBuilderPanel').classList.toggle('hidden', !state.examPanelOpen);
+        document.getElementById('examPanelIndicator').textContent = state.examPanelOpen ? '▾' : '▸';
+      });
+      document.getElementById('btnToggleLabsPanel').addEventListener('click', () => {
+        state.labsPanelOpen = !state.labsPanelOpen;
+        document.getElementById('labsBuilderPanel').classList.toggle('hidden', !state.labsPanelOpen);
+        document.getElementById('labsPanelIndicator').textContent = state.labsPanelOpen ? '▾' : '▸';
+      });
+
+      // Bind SSVV inputs
+      [['efPa', 'pa'], ['efFc', 'fc'], ['efFr', 'fr'], ['efSpo2', 'spo2'], ['efTax', 'tax'], ['efHgt', 'hgt']].forEach(([elId, key]) => {
+        document.getElementById(elId).addEventListener('input', e => {
+          const p = getSelectedPatient();
+          if (!p) return;
+          ensurePatientStructure(p);
+          p.exam[key] = e.target.value;
+          scheduleAutoSave();
+        });
+      });
+      document.getElementById('btnAllNormalExam').addEventListener('click', () => {
+        const p = getSelectedPatient();
+        if (!p) return;
+        EXAM_SYSTEMS.forEach(s => { p.exam.systems[s.key] = { status: 'normal', text: '' }; });
+        renderExamSystemsUI(p);
+        scheduleAutoSave();
+        showToast('Todos os sistemas marcados como Normais.');
+      });
+      document.getElementById('btnInsertExamIntoNotes').addEventListener('click', () => {
+        const p = getSelectedPatient();
+        if (!p) return;
+        const txt = buildExamText(p.exam);
+        if (txt) {
+          insertTextInActiveTextarea('\n' + txt + '\n');
+          showToast('Exame físico inserido na história!');
+        }
+      });
+
+      // Bind Labs inputs (Kaio's Exact Format)
+      [['labDate', 'date'], ['labHb', 'hb'], ['labHt', 'ht'], ['labLeuco', 'leuco'], ['labBands', 'bands'], ['labPlaq', 'plaq'],
+       ['labUr', 'ur'], ['labCr', 'cr'], ['labNa', 'na'], ['labK', 'k'], ['labPcr', 'pcr'], ['labOthers', 'others'], ['labImaging', 'imaging']].forEach(([elId, key]) => {
+        document.getElementById(elId).addEventListener('input', e => {
+          const p = getSelectedPatient();
+          if (!p) return;
+          ensurePatientStructure(p);
+          p.labs[key] = e.target.value;
+          document.getElementById('labsLivePreview').textContent = buildLabsText(p.labs) || 'Preencha os campos acima.';
+          scheduleAutoSave();
+        });
+      });
+      document.getElementById('btnInsertLabsIntoNotes').addEventListener('click', () => {
+        const p = getSelectedPatient();
+        if (!p) return;
+        const txt = buildLabsText(p.labs);
+        if (txt) {
+          insertTextInActiveTextarea('\n' + txt + '\n');
+          showToast('Exames inseridos na história!');
+        }
+      });
+
+      // Notes & Slash Commands
       document.getElementById('pNotes').addEventListener('input', e => {
         const p = getSelectedPatient();
         if (!p) return;
         let val = e.target.value;
         const cursor = e.target.selectionStart ?? val.length;
-        const beforeCursor = val.slice(0, cursor);
-
-        // Expand /upa, /soap, /exame, /sv, /ssvv on trailing space
+        const before = val.slice(0, cursor);
         for (const [cmd, tpl] of Object.entries(SLASH_TEMPLATES)) {
-          if (beforeCursor.endsWith(cmd + ' ')) {
-            const newBefore = beforeCursor.slice(0, -(cmd.length + 1)) + tpl;
-            val = newBefore + val.slice(cursor);
+          if (before.endsWith(cmd + ' ')) {
+            const nextBefore = before.slice(0, -(cmd.length + 1)) + tpl;
+            val = nextBefore + val.slice(cursor);
             e.target.value = val;
-            e.target.setSelectionRange(newBefore.length, newBefore.length);
+            e.target.setSelectionRange(nextBefore.length, nextBefore.length);
             break;
           }
         }
-
         p.notes = val;
         document.getElementById('pCharCount').textContent = `${val.length} chars`;
+        renderLibraryList();
         scheduleAutoSave();
       });
 
       document.querySelectorAll('.cmd-chip').forEach(btn => {
         btn.addEventListener('click', () => {
-          const cmd = btn.getAttribute('data-cmd');
-          if (SLASH_TEMPLATES[cmd]) insertTextInActiveTextarea(SLASH_TEMPLATES[cmd]);
+          const c = btn.getAttribute('data-cmd');
+          if (SLASH_TEMPLATES[c]) insertTextInActiveTextarea(SLASH_TEMPLATES[c]);
         });
       });
 
-      // Patient Action Buttons
       document.getElementById('btnCopyPatient').addEventListener('click', () => {
         const p = getSelectedPatient();
-        if (p) copyText(formatPatientForPep(p), 'Ficha copiada para o prontuário!');
+        if (p) copyText(formatPatientForPep(p, false), 'História completa copiada p/ PEP!');
       });
 
       document.getElementById('btnToggleArchive').addEventListener('click', () => {
         const p = getSelectedPatient();
         if (!p) return;
         p.archived = !p.archived;
-        showToast(p.archived ? 'Paciente movido para Altas.' : 'Paciente reativado.');
+        showToast(p.archived ? 'Movido para Altas.' : 'Paciente reativado.');
         const next = state.db.patients.find(x => Boolean(x.archived) === (state.activeTab === 'archived'));
         state.selectedId = next ? next.id : null;
         scheduleAutoSave();
@@ -1545,7 +1909,7 @@
       document.getElementById('btnDeletePatient').addEventListener('click', () => {
         const p = getSelectedPatient();
         if (!p) return;
-        askConfirm(`Excluir permanentemente a ficha de "${p.name || p.bed || 'Sem nome'}"?`, () => {
+        askConfirm(`Excluir permanentemente "${p.name || p.bed || 'Sem nome'}"?`, () => {
           state.db.patients = state.db.patients.filter(x => x.id !== p.id);
           const next = state.db.patients.find(x => Boolean(x.archived) === (state.activeTab === 'archived'));
           state.selectedId = next ? next.id : null;
@@ -1557,45 +1921,31 @@
 
       // Protocol Bindings
       document.getElementById('protoTitle').addEventListener('input', e => {
-        const pr = getSelectedProtocol();
-        if (!pr) return;
-        pr.title = e.target.value;
-        renderLibraryList();
-        scheduleAutoSave();
+        const pr = getSelectedProtocol(); if (!pr) return; pr.title = e.target.value; renderLibraryList(); scheduleAutoSave();
       });
       document.getElementById('protoTag').addEventListener('input', e => {
-        const pr = getSelectedProtocol();
-        if (!pr) return;
-        pr.category = e.target.value;
-        renderLibraryList();
-        scheduleAutoSave();
+        const pr = getSelectedProtocol(); if (!pr) return; pr.category = e.target.value; renderLibraryList(); scheduleAutoSave();
       });
       document.getElementById('protoContent').addEventListener('input', e => {
-        const pr = getSelectedProtocol();
-        if (!pr) return;
-        pr.content = e.target.value;
-        scheduleAutoSave();
+        const pr = getSelectedProtocol(); if (!pr) return; pr.content = e.target.value; scheduleAutoSave();
       });
       document.getElementById('btnCopyProtocol').addEventListener('click', () => {
-        const pr = getSelectedProtocol();
-        if (pr) copyText(`${pr.title}\n\n${pr.content}`, 'Conduta copiada!');
+        const pr = getSelectedProtocol(); if (pr) copyText(`${pr.title}\n\n${pr.content}`, 'Conduta copiada!');
       });
       document.getElementById('btnDeleteProtocol').addEventListener('click', () => {
-        const pr = getSelectedProtocol();
-        if (!pr) return;
-        askConfirm(`Excluir a conduta "${pr.title}"?`, () => {
+        const pr = getSelectedProtocol(); if (!pr) return;
+        askConfirm(`Excluir conduta "${pr.title}"?`, () => {
           state.db.protocols = state.db.protocols.filter(x => x.id !== pr.id);
           state.selectedId = state.db.protocols[0] ? state.db.protocols[0].id : null;
           scheduleAutoSave();
           renderWorkspace();
-          showToast('Conduta excluída.');
         });
       });
 
       // Tools Drawer
       document.getElementById('btnOpenTools').addEventListener('click', () => {
-        updateCalculators();
-        buildCompactLabLine();
+        updateAdultCalculators();
+        updatePediatricCalculator();
         document.getElementById('toolsDrawer').classList.remove('hidden');
       });
       document.getElementById('btnCloseTools').addEventListener('click', closeAllModals);
@@ -1604,33 +1954,29 @@
         btn.addEventListener('click', () => {
           const t = btn.getAttribute('data-tool-tab');
           document.querySelectorAll('.tool-tab-btn').forEach(b => {
-            const active = b === btn;
-            b.className = active
-              ? 'tool-tab-btn pb-2 font-bold border-b-2 border-teal-700 text-teal-700 dark:text-teal-400'
-              : 'tool-tab-btn pb-2 font-medium border-b-2 border-transparent text-slate-500';
+            b.className = b === btn
+              ? 'tool-tab-btn pb-2 font-bold border-b-2 border-teal-700 text-teal-700 dark:text-teal-400 shrink-0'
+              : 'tool-tab-btn pb-2 font-medium border-b-2 border-transparent text-slate-500 shrink-0';
           });
-          document.getElementById('toolTabCalc').classList.toggle('hidden', t !== 'calc');
-          document.getElementById('toolTabLabs').classList.toggle('hidden', t !== 'labs');
+          document.getElementById('toolTabAdult').classList.toggle('hidden', t !== 'adult');
+          document.getElementById('toolTabPeds').classList.toggle('hidden', t !== 'peds');
+          document.getElementById('toolTabSmart').classList.toggle('hidden', t !== 'smart');
           document.getElementById('toolTabExport').classList.toggle('hidden', t !== 'export');
         });
       });
 
       ['cgAge', 'cgWeight', 'cgCr', 'cgSex', 'naVal', 'naGluc', 'vasoConc', 'vasoWt', 'vasoMl', 'bmiW', 'bmiH', 'bmiS'].forEach(id => {
-        document.getElementById(id).addEventListener('input', updateCalculators);
-        document.getElementById(id).addEventListener('change', updateCalculators);
+        document.getElementById(id).addEventListener('input', updateAdultCalculators);
+        document.getElementById(id).addEventListener('change', updateAdultCalculators);
       });
+      document.getElementById('pedsWeightInput').addEventListener('input', updatePediatricCalculator);
       document.getElementById('btnInsCrCl').addEventListener('click', () => { insertTextInActiveTextarea(`[${document.getElementById('cgOut').textContent}] `); closeAllModals(); });
       document.getElementById('btnInsNa').addEventListener('click', () => { insertTextInActiveTextarea(`[${document.getElementById('naOut').textContent}] `); closeAllModals(); });
       document.getElementById('btnInsVaso').addEventListener('click', () => { insertTextInActiveTextarea(`[DVA: ${document.getElementById('vasoOut').textContent}] `); closeAllModals(); });
       document.getElementById('btnInsBmi').addEventListener('click', () => { insertTextInActiveTextarea(`[${document.getElementById('bmiOut').textContent}] `); closeAllModals(); });
+      document.getElementById('btnRunSmartPaste').addEventListener('click', runSmartPaste);
 
-      document.getElementById('labRawInput').addEventListener('input', buildCompactLabLine);
-      document.getElementById('btnInsertCompactLabs').addEventListener('click', () => {
-        insertTextInActiveTextarea('\n' + document.getElementById('labCompactPreview').textContent + '\n');
-        closeAllModals();
-      });
-
-      // Print A4 & Backup JSON
+      // Print & Backup
       document.getElementById('btnPrintA4').addEventListener('click', () => {
         if (!state.db) return;
         document.getElementById('printSubtitle').textContent = `Caderno: /${state.slug}`;
@@ -1640,7 +1986,7 @@
         state.db.patients.filter(p => !p.archived).forEach(p => {
           const card = document.createElement('div');
           card.className = 'print-card whitespace-pre-wrap';
-          card.textContent = formatPatientForPep(p);
+          card.textContent = formatPatientForPep(p, false);
           grid.appendChild(card);
         });
         closeAllModals();
@@ -1669,59 +2015,91 @@
             const parsed = JSON.parse(String(r.result || '{}'));
             if (parsed && Array.isArray(parsed.patients)) {
               state.db = parsed;
+              state.db.patients = state.db.patients.map(ensurePatientStructure);
               if (!Array.isArray(state.db.protocols)) state.db.protocols = [];
               scheduleAutoSave();
               renderWorkspace();
               closeAllModals();
               showToast('Backup restaurado!');
-            } else {
-              showToast('Arquivo JSON inválido.');
-            }
-          } catch (err) {
-            showToast('Erro ao ler backup.');
-          }
+            } else showToast('JSON inválido.');
+          } catch (err) { showToast('Erro ao ler backup.'); }
         };
         r.readAsText(file);
       });
 
-      // Settings & Admin Modal
-      function openSettingsModal(tab = 'cloud') {
+      // Settings Modal (Cloud, PIN, Admin)
+      function switchSettingsTab(tab) {
+        document.getElementById('settingsCloudPanel').classList.toggle('hidden', tab !== 'cloud');
+        document.getElementById('settingsPinPanel').classList.toggle('hidden', tab !== 'pin');
+        document.getElementById('settingsAdminPanel').classList.toggle('hidden', tab !== 'admin');
+        const activeCls = 'font-bold text-teal-700 dark:text-teal-400 border-b-2 border-teal-700 pb-1';
+        const idleCls = 'font-medium text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 pb-1';
+        document.getElementById('settingsTabCloudBtn').className = tab === 'cloud' ? activeCls : idleCls;
+        document.getElementById('settingsTabPinBtn').className = tab === 'pin' ? activeCls : idleCls;
+        document.getElementById('settingsTabAdminBtn').className = tab === 'admin' ? activeCls : idleCls;
+      }
+
+      function openSettings(tab = 'cloud') {
         document.getElementById('cloudUrlInput').value = state.apiUrl;
         document.getElementById('cloudDiagnosticBox').classList.add('hidden');
+        document.getElementById('pinSettingsSlug').textContent = state.slug ? '/' + state.slug : '(abra um caderno primeiro)';
         switchSettingsTab(tab);
         document.getElementById('settingsModal').classList.remove('hidden');
       }
 
-      function switchSettingsTab(tab) {
-        const isCloud = tab === 'cloud';
-        document.getElementById('settingsCloudPanel').classList.toggle('hidden', !isCloud);
-        document.getElementById('settingsAdminPanel').classList.toggle('hidden', isCloud);
-        document.getElementById('settingsTabCloudBtn').className = isCloud
-          ? 'font-bold text-teal-700 dark:text-teal-400 border-b-2 border-teal-700 pb-1'
-          : 'font-medium text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 pb-1';
-        document.getElementById('settingsTabAdminBtn').className = !isCloud
-          ? 'font-bold text-teal-700 dark:text-teal-400 border-b-2 border-teal-700 pb-1'
-          : 'font-medium text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 pb-1';
-      }
-
-      document.getElementById('btnOpenSettings').addEventListener('click', () => openSettingsModal('cloud'));
-      document.getElementById('btnLandingConfig').addEventListener('click', () => openSettingsModal('cloud'));
+      document.getElementById('btnOpenSettings').addEventListener('click', () => openSettings('cloud'));
+      document.getElementById('btnLandingConfig').addEventListener('click', () => openSettings('cloud'));
       document.getElementById('btnCloseSettings').addEventListener('click', closeAllModals);
       document.getElementById('settingsTabCloudBtn').addEventListener('click', () => switchSettingsTab('cloud'));
+      document.getElementById('settingsTabPinBtn').addEventListener('click', () => switchSettingsTab('pin'));
       document.getElementById('settingsTabAdminBtn').addEventListener('click', () => switchSettingsTab('admin'));
 
-      document.getElementById('btnTestCloud').addEventListener('click', testCloudConnection);
+      document.getElementById('btnTestCloud').addEventListener('click', async () => {
+        const rawUrl = document.getElementById('cloudUrlInput').value.trim();
+        const box = document.getElementById('cloudDiagnosticBox');
+        box.classList.remove('hidden');
+        if (!rawUrl || rawUrl.endsWith('/dev')) {
+          box.className = 'p-3 rounded-xl text-xs border bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300';
+          box.textContent = rawUrl.endsWith('/dev') ? 'Erro: use a URL terminada em /exec (não /dev).' : 'Cole a URL do Apps Script primeiro.';
+          return;
+        }
+        box.className = 'p-3 rounded-xl text-xs border bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600';
+        box.textContent = 'Testando...';
+        try {
+          const json = await fetchAppsScriptJson(`${rawUrl}?action=ping`);
+          if (json && json.ok) {
+            box.className = 'p-3 rounded-xl text-xs border bg-teal-50 dark:bg-teal-950/40 border-teal-200 dark:border-teal-800 text-teal-800 dark:text-teal-300';
+            box.textContent = `✅ Conectado! Backend V${json.version || '4'} online.`;
+          } else throw new Error(json.error);
+        } catch (err) {
+          box.className = 'p-3 rounded-xl text-xs border bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300';
+          box.textContent = err.message === 'PERMISSION_HTML'
+            ? '❌ Erro de Permissão: reimplante com "Quem pode acessar: Qualquer pessoa".'
+            : '❌ Erro de conexão. Verifique a URL /exec e se SPREADSHEET_ID está configurado.';
+        }
+      });
+
       document.getElementById('btnSaveCloud').addEventListener('click', () => {
         state.apiUrl = document.getElementById('cloudUrlInput').value.trim();
         safeSet(CLOUD_URL_KEY, state.apiUrl);
         closeAllModals();
-        if (state.apiUrl && state.slug) {
-          scheduleAutoSave();
-          showToast('URL da nuvem salva!');
-        } else if (state.apiUrl) {
-          showToast('URL da nuvem salva!');
+        if (state.apiUrl && state.slug) pushToCloudNow(state.slug, state.db);
+        showToast('Configuração de nuvem salva!');
+      });
+
+      document.getElementById('btnSavePin').addEventListener('click', async () => {
+        if (!state.slug || !state.db) { showToast('Abra um caderno primeiro.'); return; }
+        const pinVal = document.getElementById('pinSetInput').value.trim();
+        const newHash = pinVal ? await hashPin(state.slug, pinVal) : '';
+        const ok = await pushToCloudNow(state.slug, state.db, { setPinHash: newHash });
+        if (ok) {
+          state.currentPinHash = newHash;
+          safeSet(PIN_CACHE_PREFIX + state.slug, newHash);
+          document.getElementById('pinSetInput').value = '';
+          closeAllModals();
+          showToast(pinVal ? 'PIN ativado neste caderno!' : 'PIN removido.');
         } else {
-          showToast('Modo somente local ativado.');
+          showToast('Conecte à nuvem para salvar o PIN.');
         }
       });
 
@@ -1730,44 +2108,38 @@
         state.adminKey = document.getElementById('adminKeyInput').value.trim();
         loadAdminDashboard();
       });
-
       document.getElementById('btnRefreshAdminList').addEventListener('click', loadAdminDashboard);
 
       document.getElementById('btnSaveGlobalNotice').addEventListener('click', async () => {
         const noticeText = document.getElementById('adminNoticeInput').value.trim();
-        try {
-          const json = await fetchAppsScriptJson(state.apiUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({
-              action: 'admin_notice',
-              adminKey: state.adminKey,
-              notice: noticeText
-            })
-          });
-          if (json.ok) {
-            applyGlobalNotice(noticeText);
-            showToast(noticeText ? 'Aviso global publicado!' : 'Aviso global removido.');
-          }
-        } catch (err) {
-          showToast('Erro ao publicar aviso.');
+        const json = await fetchAppsScriptJson(state.apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ action: 'admin_notice', adminKey: state.adminKey, notice: noticeText })
+        });
+        if (json.ok) { applyGlobalNotice(noticeText); showToast('Aviso global atualizado!'); }
+      });
+
+      document.getElementById('btnPushCurrentProtocolsAsDefault').addEventListener('click', async () => {
+        if (!state.db || !Array.isArray(state.db.protocols)) { showToast('Abra seu caderno primeiro.'); return; }
+        const json = await fetchAppsScriptJson(state.apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ action: 'admin_default_protocols', adminKey: state.adminKey, protocols: state.db.protocols })
+        });
+        if (json.ok) {
+          document.getElementById('adminDefaultProtoStatus').textContent = `${json.count} conduta(s) padrão salva(s) para novos usuários.`;
+          showToast('Condutas padrão globais atualizadas!');
         }
       });
 
-      // Confirm Modal
       document.getElementById('btnCancelConfirm').addEventListener('click', closeAllModals);
       document.getElementById('btnAcceptConfirm').addEventListener('click', () => {
-        const cb = confirmCallback;
-        confirmCallback = null;
-        closeAllModals();
-        if (cb) cb();
+        const cb = confirmCallback; confirmCallback = null; closeAllModals(); if (cb) cb();
       });
 
-      // Backdrop & Global Shortcuts
       document.querySelectorAll('.modal-backdrop').forEach(el => {
-        el.addEventListener('click', e => {
-          if (e.target === el) closeAllModals();
-        });
+        el.addEventListener('click', e => { if (e.target === el) closeAllModals(); });
       });
 
       window.addEventListener('keydown', e => {
@@ -1776,10 +2148,7 @@
           const s = document.getElementById('librarySearch');
           if (s && state.slug) s.focus();
         }
-        if (e.altKey && e.key.toLowerCase() === 'p' && state.slug) {
-          e.preventDefault();
-          togglePrivacy();
-        }
+        if (e.altKey && e.key.toLowerCase() === 'p' && state.slug) { e.preventDefault(); togglePrivacy(); }
         if (e.key === 'Escape') closeAllModals();
       });
     });
